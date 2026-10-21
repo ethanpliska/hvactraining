@@ -6,6 +6,7 @@
 <title>Package Unit Trouble</title>
 <style>
 :root{
+  --VH:1vh; --VW:1vw; --bz:1;
   --bg:#141a21; --panel:#1d252f; --panel2:#243040; --line:#33414f; --ink:#e8edf2; --dim:#8fa1b3;
   --yellow:#f5c400; --red:#e5483b; --green:#38c172; --blue:#4aa3df; --metal:#2c3845; --metal2:#3a4958;
   --head:"Bahnschrift","DIN Alternate","Arial Narrow","Helvetica Neue",Arial,sans-serif;
@@ -103,7 +104,7 @@ select{background:#10151b;color:var(--ink);border:1px solid var(--line);border-r
 
 #modal{position:fixed;inset:0;background:rgba(8,11,15,.82);display:flex;align-items:center;justify-content:center;z-index:9}
 #modal[hidden]{display:none}
-.sheet{background:var(--panel);border:2px solid var(--yellow);border-radius:6px;padding:26px 30px;width:min(520px,92vw)}
+.sheet{background:var(--panel);border:2px solid var(--yellow);border-radius:6px;padding:26px 30px;width:min(520px,calc(92 * var(--VW)))}
 .sheet h3{margin:0 0 4px;font:700 26px var(--head);letter-spacing:.06em;text-transform:uppercase}
 .sheet .kick{color:var(--yellow);font:700 12px var(--head);letter-spacing:.16em;text-transform:uppercase;margin-bottom:8px}
 .sheet p{margin:8px 0}
@@ -165,7 +166,7 @@ header{flex-wrap:wrap;row-gap:6px}.hud{margin-left:auto}#lvlTabs{display:flex;ga
 .plate .plm{font:600 14px var(--mono);margin-bottom:12px;color:#33414f}
 .plate .plr{font:600 15px var(--mono);padding:7px 0;border-top:1px solid #9aa6b1}
 .plate .dim{color:#46525e;font-size:12.5px;margin-top:12px}
-#unitScroll::after{content:"";display:block;height:50vh;flex:none}
+#unitScroll::after{content:"";display:block;height:calc(50 * var(--VH));flex:none}
 
 .pchip{background:#0f1419;color:#e6edf3;border:1px solid #3a4756;border-radius:3px;padding:3px 8px;font:600 12px var(--mono);cursor:pointer}
 .pchip.sel{outline:2px solid #ffd23f}
@@ -231,7 +232,7 @@ html.phone .tabs{flex-wrap:wrap;gap:3px}
 html.phone .tab{padding:10px 12px;font-size:12px;border-bottom:1px solid var(--line);border-radius:4px}
 html.phone .tabs .zoom{margin-left:0;width:100%}
 html.phone .view{border-radius:4px;min-height:0;padding:6px}
-html.phone .view .scroll{max-height:72vh;-webkit-overflow-scrolling:touch}
+html.phone .view .scroll{max-height:calc(72 * var(--VH));-webkit-overflow-scrolling:touch}
 html.phone aside{overflow:visible;padding-right:0}
 html.phone #modal{align-items:flex-start;overflow:auto;padding:10px}
 html.phone .sheet{padding:18px 16px;width:100%;max-height:none;margin:auto}
@@ -248,15 +249,15 @@ html.phone header .btn{flex:1 1 auto}
 #viewBtn{white-space:nowrap}
 
 /* the repair minigames get nearly the whole window */
-.sheet.wide.big{width:min(1240px,97vw);max-height:96vh;overflow:auto;padding:14px 22px 16px}
+.sheet.wide.big{width:min(1240px,calc(97 * var(--VW)));max-height:calc(96 * var(--VH));overflow:auto;padding:14px 22px 16px}
 .sheet.big h3{margin:2px 0 4px;font-size:22px}
-.sheet.big svg{max-height:calc(96vh - 200px);margin:0 auto}
+.sheet.big svg{max-height:calc(96 * var(--VH) - 200px);margin:0 auto}
 .sheet.big svg,.sheet.big canvas{box-shadow:0 0 0 1px var(--line)}
 html.phone .sheet.big{width:100%;max-height:none;padding:14px 12px}
 html.phone .sheet.big svg{max-height:none}
 
 /* instructor job */
-.sheet.wide{width:min(780px,96vw);max-height:92vh;overflow:auto}
+.sheet.wide{width:min(780px,calc(96 * var(--VW)));max-height:calc(92 * var(--VH));overflow:auto}
 .fld{margin:10px 0}.fld>label{display:block;font:700 12px var(--head);letter-spacing:.08em;text-transform:uppercase;color:var(--yellow);margin-bottom:4px}
 .fld input[type=text],.fld input[type=password],.fld textarea{width:100%;box-sizing:border-box;background:#10151b;color:var(--ink);border:1px solid var(--line);border-radius:3px;padding:8px;font:inherit}
 .fld textarea{resize:vertical;font-family:var(--mono);font-size:12.5px}
@@ -290,6 +291,58 @@ html[data-tab="Schem"] #log,html[data-tab="Order"] #log,html[data-tab="Plate"] #
 .gct{font:700 11px var(--head);letter-spacing:.1em;text-transform:uppercase;color:var(--yellow);margin-bottom:2px;min-height:1em}
 html.phone .gdual{grid-template-columns:1fr}
 
+/* smartboard view: the whole page is scaled up so it reads from across the room, with big touch targets */
+html.board{--VH:calc(1vh / var(--bz));--VW:calc(1vw / var(--bz))}
+html.board body{zoom:var(--bz);height:calc(100vh / var(--bz));min-width:0}
+html.board .btn,html.board .tab,html.board .lvl,html.board .setbtn,html.board .mode,html.board .chip,html.board .pchip,html.board .zb,html.board select{min-height:44px}
+html.board .tab{padding:12px 20px}
+html.board .sheet{padding:30px 34px}
+#bzBox{display:none;gap:4px;align-items:center}html.board #bzBox{display:inline-flex}
+
+html:is([data-tab="Schem"],[data-tab="Order"],[data-tab="Plate"],[data-tab="Spec"]) #cardLog{display:none}
+html[data-tab="Unit"] #cardCtl{order:1}
+html[data-tab="Unit"] #cardStatus{order:2}
+html[data-tab="Unit"] #cardMeter{order:3}
+html[data-tab="Unit"] #cardClamp{order:4}
+html[data-tab="Unit"] #cardParts{order:5}
+html[data-tab="Unit"] #cardLog{order:6}
+html[data-tab="Unit"] #guide{order:7}
+
+.irow{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}.irow input{width:100%;box-sizing:border-box}
+
+.ifaults{grid-template-columns:1fr}
+.igrp{border:1px solid var(--line);border-radius:4px;padding:0 10px}
+.igrp summary{cursor:pointer;font:700 12px var(--head);letter-spacing:.08em;text-transform:uppercase;color:var(--ink);padding:10px 0}
+.igrp[open] summary{border-bottom:1px solid var(--line);margin-bottom:6px}
+.igrp[open]{padding-bottom:8px}
+
+html.phone #unitScroll::after{height:calc(8 * var(--VH))}
+html.phone #unitScroll{max-height:calc(78 * var(--VH))}
+html.phone .tab{padding:6px 9px;font-size:11px}
+html.phone .unitnav .chip{min-height:32px;padding:5px 9px;font-size:11px}
+html.phone .unitnav{gap:4px;margin-bottom:4px}
+html.phone .unitnav select{flex:1 1 100%;min-height:34px}
+html.phone .tabs .zoom .btn,html.phone .tabs .zoom .zb{min-height:34px}
+html.phone[data-tab="Unit"] aside{display:contents}
+html.phone[data-tab="Unit"] #cardMeter{order:-1}
+
+#tabSel{display:none}
+html.phone #tabSel{display:block;width:100%;font:700 14px var(--head);letter-spacing:.06em;text-transform:uppercase;min-height:44px}
+html.phone .tabs .tab{display:none}
+
+#setSel{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:6px 10px;font:700 12px var(--head);letter-spacing:.06em;text-transform:uppercase;color:var(--ink);min-width:190px}
+html.phone #setSel{width:100%}
+html.phone #picPanel{grid-template-columns:1fr;gap:10px;padding:10px 0}
+html.phone #picPanel .pc{width:100%;box-sizing:border-box}
+html.phone #picPanel .row{flex-wrap:wrap}
+html.phone #viewPic .scroll{max-height:none;overflow:visible}
+/* no white selection or focus outlines on clicked components */
+svg *:focus,svg *:focus-visible,svg:focus,[tabindex]:focus{outline:none!important}
+#picSvg .ring{display:none!important}
+.spot.hid:focus .hv{opacity:0}
+@media (hover:none){.spot.hid:hover .hv{opacity:0}}
+*{-webkit-tap-highlight-color:transparent}
+
 </style>
 </head>
 <body>
@@ -298,7 +351,8 @@ html.phone .gdual{grid-template-columns:1fr}
   <div id="setTabs" role="tablist" aria-label="Level sets"></div>
   <div id="lvlTabs" role="tablist" aria-label="Levels"></div>
   <button class="btn" id="instrBtn" type="button" hidden title="Change the job (password needed)">Instructor setup</button>
-  <button class="btn" id="viewBtn" type="button" title="Switch between the desktop layout and a single-column phone layout">View: Desktop</button>
+  <button class="btn" id="viewBtn" type="button" title="Switch between the desktop, phone and smartboard layouts">View: Desktop</button>
+  <span id="bzBox"><button class="btn" id="bzDn" type="button" title="Make everything smaller">Size −</button><button class="btn" id="bzUp" type="button" title="Make everything bigger">Size +</button></span>
   <button class="btn" id="resetProg" type="button" title="Clear completed levels and start over at level 1">Reset progress</button>
   <div class="hud">
     <span id="strikes">Safety strikes<b>0/3</b></span>
@@ -308,6 +362,7 @@ html.phone .gdual{grid-template-columns:1fr}
 <main>
   <section class="left">
     <div class="tabs">
+      <select id="tabSel" aria-label="Choose a screen"><option value="Unit">Unit panel</option><option value="Schem">Wiring schematic</option><option value="Pic">Unit picture</option><option value="Therm">Thermostat</option><option value="Order">Work order</option><option value="Plate">Data plate</option><option value="Spec">Service specs</option></select>
       <button class="tab on" id="tabUnit" type="button">Unit panel</button>
       <button class="tab" id="tabSchem" type="button">Wiring schematic</button>
       <button class="tab" id="tabPic" type="button">Unit picture</button>
@@ -315,11 +370,11 @@ html.phone .gdual{grid-template-columns:1fr}
       <button class="tab" id="tabOrder" type="button">Work order</button>
       <button class="tab" id="tabPlate" type="button">Data plate</button>
       <button class="tab" id="tabSpec" type="button">Service specs</button>
-      <div class="zoom" id="zoomBox"><button class="btn" id="wireTog" type="button" aria-pressed="true">Wires: On</button>Zoom <button class="zb" id="zOut" type="button" aria-label="Zoom out">−</button><span id="zLbl">100%</span><button class="zb" id="zIn" type="button" aria-label="Zoom in">+</button></div>
+      <div class="zoom" id="zoomBox"><button class="btn" id="wireTog" type="button" aria-pressed="false">Wires: Off</button>Zoom <button class="zb" id="zOut" type="button" aria-label="Zoom out">−</button><span id="zLbl">100%</span><button class="zb" id="zIn" type="button" aria-label="Zoom in">+</button></div>
     </div>
     <div class="view" id="viewUnit">
       <div class="unitnav" id="unitNav"></div>
-      <div class="scroll" id="unitScroll"><svg id="unitSvg" viewBox="0 0 1100 1000" preserveAspectRatio="xMidYMin meet" role="img" aria-label="Control panel of the package unit with probe points"></svg></div>
+      <div class="scroll" id="unitScroll"><svg id="unitSvg" class="nowires" viewBox="0 0 1100 1000" preserveAspectRatio="xMidYMin meet" role="img" aria-label="Control panel of the package unit with probe points"></svg></div>
       <div class="legend" id="legend"><span><i style="background:var(--red)"></i>Red probe</span><span><i style="background:#fff"></i>Black probe</span><span><i style="background:#e8a33b"></i>240 V leg 1 (L1/T1)</span><span><i style="background:#b48cff"></i>240 V leg 2 (L2/T2)</span><span><i style="background:#38c172"></i>Capacitor start wires</span><span><i style="background:#e5483b"></i>24 V hot</span><span><i style="background:#4aa3df"></i>Common</span><span>Click a terminal to probe.</span></div>
     </div>
     <div class="view" id="viewSchem" hidden>
@@ -360,8 +415,8 @@ html.phone .gdual{grid-template-columns:1fr}
     <div class="view" id="viewSpec" hidden><div class="scroll" id="specBody"></div></div>
   </section>
   <aside>
-    <div class="card"><h2>Job log</h2><div id="log" aria-live="polite"></div>
-      <div class="row" style="margin-top:8px"><button class="btn" id="hintBtn" type="button">Hint (costs a star)</button><button class="btn" id="restartBtn" type="button">Restart level</button></div></div>
+    <div class="card" id="cardLog"><h2>Job log</h2><div id="log" aria-live="polite"></div>
+      <div class="row" style="margin-top:8px"><button class="btn" id="restartBtn" type="button">Restart level</button></div></div>
     <div class="card" id="cardStatus"><h2>Unit status</h2><div class="status" id="status"></div></div>
     <div class="card meter" id="cardMeter">
       <h2>Multimeter</h2>
@@ -717,7 +772,12 @@ const PARTS3 = {
   belt:     { name: 'Blower belt',                         cost: 18 },
   swap:     { name: 'Swap two supply leads at the disconnect', cost: 0 },
   comp:     { name: 'Compressor (3-phase scroll)',         cost: 2400 },
-  cch:      { name: 'Crankcase heater (belly band)',       cost: 38 }
+  cch:      { name: 'Crankcase heater (belly band)',       cost: 38 },
+  jmphps:   { name: 'Remove jumper: high-pressure switch',  cost: 0 },
+  jmplps:   { name: 'Remove jumper: low-pressure switch',   cost: 0 },
+  jmpflt:   { name: 'Remove jumper: condensate float switch', cost: 0 },
+  jmpfrz:   { name: 'Remove jumper: freezestat',            cost: 0 },
+  jmppfs:   { name: 'Remove jumper: dirty-filter switch',   cost: 0 }
 };
 
 const FIXES3 = {
@@ -725,7 +785,8 @@ const FIXES3 = {
   coil_open: 'contactor', pole_burnt: 'contactor', pm_open: 'pm', phase_reversed: 'swap',
   cap_fan_weak: 'cap', fan_motor_open: 'fan', hps_open: 'hps',
   relay_coil_open: 'relay', blower_grounded: 'blower', belt_broken: 'belt', belt_loose: 'belt', belt_slack: 'beltadj', comp_open: 'comp', comp_grounded: 'comp',
-  float_bad: 'floatsw', frz_bad: 'freezestat', pfs_bad: 'pfs', cch_open: 'cch'
+  float_bad: 'floatsw', frz_bad: 'freezestat', pfs_bad: 'pfs', cch_open: 'cch',
+  jmp_hps: 'jmphps', jmp_lps: 'jmplps', jmp_float: 'jmpflt', jmp_frz: 'jmpfrz', jmp_pfs: 'jmppfs'
 };
 
 const NODES3 = {
@@ -772,9 +833,9 @@ const Sim3 = {
   t: { hum: 0, cool: 0, fanBad: 0, ok: 0, trip: 0 }, events: [],
   energized: false, relayOn: false, pmOk: false, pmSense: false,
   ext: { float: false, freeze: false, pfs: false },
-  fltClosed() { return !this.faults.has('float_bad') && !this.ext.float; },
-  frzClosed() { return !this.faults.has('frz_bad') && !this.ext.freeze; },
-  pfsClosed() { return !this.faults.has('pfs_bad') && !this.ext.pfs; },
+  fltClosed() { return this.faults.has('jmp_float') || (!this.faults.has('float_bad') && !this.ext.float); },
+  frzClosed() { return this.faults.has('jmp_frz') || (!this.faults.has('frz_bad') && !this.ext.freeze); },
+  pfsClosed() { return this.faults.has('jmp_pfs') || (!this.faults.has('pfs_bad') && !this.ext.pfs); },
 
   reset(faults, seed) {
     this.faults = new Set(faults);
@@ -834,10 +895,10 @@ const Sim3 = {
     p.T_R = p.FUSE_OUT;
     p.T_C = p.SEC_C;
     p.T_Y = (hot(p.T_R) && this.call) ? p.T_R : dead;
-    const hpsClosed = !f.has('hps_open') && !this.hpsTripped && !this.ext.hps;
+    const hpsClosed = f.has('jmp_hps') || (!f.has('hps_open') && !this.hpsTripped && !this.ext.hps);
     p.HPS_IN = p.T_Y;
     p.HPS_OUT = (hot(p.T_Y) && hpsClosed) ? p.T_Y : dead;
-    p.LPS_IN = p.HPS_OUT; p.LPS_OUT = (hot(p.LPS_IN) && !this.ext.lps) ? p.LPS_IN : dead;
+    p.LPS_IN = p.HPS_OUT; p.LPS_OUT = (hot(p.LPS_IN) && (f.has('jmp_lps') || !this.ext.lps)) ? p.LPS_IN : dead;
     p.FLT_IN = p.LPS_OUT;
     p.FLT_OUT = (hot(p.FLT_IN) && this.fltClosed()) ? p.FLT_IN : dead;
     p.FRZ_IN = p.FLT_OUT;
@@ -948,11 +1009,11 @@ const Sim3 = {
       if (is('F' + i + '_IN', 'F' + i + '_OUT')) return f.has('pfuse_L' + i) ? Infinity : 0.1;
     }
     if (is('FUSE_IN', 'FUSE_OUT')) return f.has('fuse_open') ? Infinity : 0.1;
-    if (is('HPS_IN', 'HPS_OUT')) return (f.has('hps_open') || this.hpsTripped || this.ext.hps) ? Infinity : 0.1;
-    if (is('LPS_IN', 'LPS_OUT')) return this.ext.lps ? Infinity : 0.1;
-    if (is('FLT_IN', 'FLT_OUT')) return this.fltClosed() ? 0.1 : Infinity;
-    if (is('FRZ_IN', 'FRZ_OUT')) return this.frzClosed() ? 0.1 : Infinity;
-    if (is('PFS_IN', 'PFS_OUT')) return this.pfsClosed() ? 0.1 : Infinity;
+    if (is('HPS_IN', 'HPS_OUT')) return f.has('jmp_hps') ? 0 : (f.has('hps_open') || this.hpsTripped || this.ext.hps) ? Infinity : 0.1;
+    if (is('LPS_IN', 'LPS_OUT')) return f.has('jmp_lps') ? 0 : this.ext.lps ? Infinity : 0.1;
+    if (is('FLT_IN', 'FLT_OUT')) return f.has('jmp_float') ? 0 : this.fltClosed() ? 0.1 : Infinity;
+    if (is('FRZ_IN', 'FRZ_OUT')) return f.has('jmp_frz') ? 0 : this.frzClosed() ? 0.1 : Infinity;
+    if (is('PFS_IN', 'PFS_OUT')) return f.has('jmp_pfs') ? 0 : this.pfsClosed() ? 0.1 : Infinity;
     if (is('PM_IN', 'PM_OUT')) return Infinity;            // monitor contact is open with no power
     if (is('COIL_A', 'COIL_B')) return f.has('coil_open') ? Infinity : 12;
     if (is('FRLY_A', 'FRLY_B')) return f.has('relay_coil_open') ? Infinity : 25;
@@ -3045,27 +3106,34 @@ const REFPARTS = {
   drain:     { name: 'Drain line vacuum and pan treatment',    cost: 6 },
   floatsw:   { name: 'Condensate overflow (float) switch',   cost: 24 },
   freezestat:{ name: 'Freezestat (coil low-temp switch)',    cost: 30 },
-  pfs:       { name: 'Dirty-filter pressure switch',         cost: 38 }
+  pfs:       { name: 'Dirty-filter pressure switch',         cost: 38 },
+  condcoil:  { name: 'Condenser coil',                       cost: 520 },
+  braze:     { name: 'Braze repair: drier joint (new drier)', cost: 60 },
+  flare:     { name: 'Flare fitting and nut: TXV line',      cost: 14 },
+  valvepack: { name: 'Service valve stem packing and cap',   cost: 6 }
 };
 const REFPARTS_C2 = { core2: { name: 'Schrader valve core, low side, circuit 2', cost: 3 }, corehi2: { name: 'Schrader valve core, high side, circuit 2', cost: 3 } };
 Object.assign(PARTS1, REFPARTS); Object.assign(PARTS3, REFPARTS);
-const OPENS_SYSTEM = new Set(['drier', 'txv', 'evapcoil', 'comp']);
+const OPENS_SYSTEM = new Set(['drier', 'txv', 'evapcoil', 'comp', 'condcoil', 'braze', 'flare']);
+/* lb of refrigerant lost per second while running or sitting, by leak */
+const LEAK_RATE = { r_leak_core: 0.012, r_leak_core_hi: 0.012, r_leak_core2: 0.012, r_leak_core_hi2: 0.012, r_leak_coil: 0.012, r_leak_cond: 0.012, r_leak_braze: 0.02, r_leak_flare: 0.008, r_leak_valve: 0.005 };
 
 const REF_FIXES = {
   r_dirty_filter: 'filter', r_dirty_evap: 'cleanevap', r_dirty_cond: 'cleancond',
-  r_leak_core: 'core', r_leak_core_hi: 'corehi', r_leak_core2: 'core2', r_leak_core_hi2: 'corehi2', r_leak_coil: 'evapcoil', r_drain_clog: 'drain', r_filter_plugged: 'filter', r_txv_restricted: 'txv', r_drier_restricted: 'drier', r_comp_weak: 'comp'
+  r_leak_core: 'core', r_leak_core_hi: 'corehi', r_leak_core2: 'core2', r_leak_core_hi2: 'corehi2', r_leak_coil: 'evapcoil', r_leak_cond: 'condcoil', r_leak_braze: 'braze', r_leak_flare: 'flare', r_leak_valve: 'valvepack', r_drain_clog: 'drain', r_filter_plugged: 'filter', r_txv_restricted: 'txv', r_drier_restricted: 'drier', r_comp_weak: 'comp'
 };
 
 const clampN = (v, a, b) => Math.max(a, Math.min(b, v));
 
 const Ref = {
   pers: { sc: 0, sh: 0, dTc: 1, dt: 0 }, pers2: { sc: 0, sh: 0, dTc: 1, dt: 0 }, cr2f: 1, rf1: 0, rf2: 0, hose2: { low: false, high: false },
+  lk: { float: false, freeze: false, pfs: false, hps: false, lps: false }, newLock: false,
   faults: new Set(), nominal: 9, charge: 9, tamb: 95, tret: 78, twb: 64,
   runT: 0, rf: 0, iceT: 0, pan: 0, frz: false, fl: false, hose: { low: false, high: false }, net: 0,
 
   reset(faults, opts) {
     opts = opts || {};
-    this.faults = new Set(faults);
+    this.faults = new Set(faults); this.resetLock(); this.newLock = false;
     this.nominal = opts.nominal || 9;
     this.charge = opts.charge != null ? opts.charge : this.nominal;
     { const h = n => { const x = Math.sin((opts.seed || 0) * 12.9898 + n * 78.233) * 43758.5453; return x - Math.floor(x); };
@@ -3139,11 +3207,11 @@ const Ref = {
 
   tick(dt, s) {
     const run = s.comp === 'run' && this.charge > 0.6;
-    this.rf = clampN(this.rf + (run ? dt / 12 : -dt / 6), 0, 1);
-    if (s.c) [0, 1].forEach(i => { const ri = s.c[i].comp === 'run' && this.charge > 0.6, key = i ? 'rf2' : 'rf1'; this[key] = clampN(this[key] + (ri ? dt / 12 : -dt / 6), 0, 1); }); else { this.rf1 = this.rf2 = this.rf; }
+    this.rf = clampN(this.rf + (run ? dt / 24 : -dt / 15), 0, 1);
+    if (s.c) [0, 1].forEach(i => { const ri = s.c[i].comp === 'run' && this.charge > 0.6, key = i ? 'rf2' : 'rf1'; this[key] = clampN(this[key] + (ri ? dt / 24 : -dt / 15), 0, 1); }); else { this.rf1 = this.rf2 = this.rf; }
     this.runT = run ? this.runT + dt : 0;
     const r = this.running(s);
-    if (run && this.rf > 0.7 && r.tevap < 32.5) this.iceT += dt; else this.iceT = Math.max(0, this.iceT - dt * (this.iceT > 3 ? 0.15 : 0.6));
+    if (run && this.rf > 0.7 && r.tevap < 32.5) this.iceT += dt; else this.iceT = Math.max(0, this.iceT - dt * (this.iceT > 3 ? 0.08 : 0.25));
     if (this.iceT > 3) this.frz = true; else if (this.iceT < 0.5) this.frz = false;
     if (run && this.has('r_drain_clog')) this.pan = Math.min(1, this.pan + dt / 15); else if (!this.has('r_drain_clog')) this.pan = Math.max(0, this.pan - dt / 5);
     if (this.pan > 0.95) this.fl = true; else if (this.pan < 0.4) this.fl = false;
@@ -3151,11 +3219,16 @@ const Ref = {
     { const rr = this.running(s), pS = run && this.rf > 0.5;
       if (pS && rr.phead >= 600) this.hpsO = true; else if (!pS || rr.phead <= 420) this.hpsO = false;
       if (pS && this.charge > 0.6 && rr.psuct < 50) this.lpsO = true; else if (!pS || rr.psuct >= 95) this.lpsO = false; }
-    if (this.has('r_leak_core') || this.has('r_leak_core_hi') || this.has('r_leak_core2') || this.has('r_leak_core_hi2') || this.has('r_leak_coil')) this.charge = Math.max(0, this.charge - 0.012 * dt);
+    /* a safety that opens trips the unit out: it stays open until the disconnect is cycled */
+    { const lk = this.lk, was = lk.float || lk.freeze || lk.pfs || lk.hps || lk.lps;
+      if (this.fl) lk.float = true; if (this.frz) lk.freeze = true; if (this.has('r_filter_plugged')) lk.pfs = true; if (this.hpsO) lk.hps = true; if (this.lpsO) lk.lps = true;
+      if (!was && (lk.float || lk.freeze || lk.pfs || lk.hps || lk.lps)) this.newLock = true; }
+    { let lr = 0; this.faults.forEach(k => { lr += LEAK_RATE[k] || 0; }); if (lr) this.charge = Math.max(0, this.charge - lr * dt); }
   },
   iced() { return this.frz || this.iceT > 3; },
   /* which of the three safety switches the refrigeration side is holding open */
-  ext() { return { float: this.fl, freeze: this.frz, pfs: this.has('r_filter_plugged'), hps: this.hpsO, lps: this.lpsO }; },
+  ext() { const k = this.lk; return { float: this.fl || k.float, freeze: this.frz || k.freeze, pfs: this.has('r_filter_plugged') || k.pfs, hps: this.hpsO || k.hps, lps: this.lpsO || k.lps }; },
+  resetLock() { this.lk = { float: false, freeze: false, pfs: false, hps: false, lps: false }; },
 
   addCharge(lb) { this.charge += lb; this.net += lb; },
   recover(lb) { const t = Math.min(lb, this.charge); this.charge -= t; this.net -= t; return t; },
@@ -4060,9 +4133,9 @@ function inspectText(id) {
       if (Ref.has('r_dirty_evap')) return 'The fins are matted with grime. The coil is badly fouled.';
       if (Ref.has('r_leak_coil')) return 'Oil stain on a return bend. Leak solution bubbles at that spot. The coil has a pinhole leak.';
       return 'The coil fins are clean and straight.';
-    case 'I_COND': return Ref.has('r_dirty_cond') ? 'The outdoor coil is packed with cottonwood fluff and grease. Air barely passes through.' : 'The outdoor coil is clean.';
-    case 'I_DRIER': return Ref.has('r_drier_restricted') && running ? 'The outlet end of the drier is noticeably colder than the inlet end, with a light frost. Flow looks restricted.' : 'The drier looks normal.';
-    case 'I_TXV': return Ref.has('r_txv_restricted') && running ? 'The TXV body and first few inches of distributor tubes are frosted. Little flow is getting through.' : 'The TXV looks normal.';
+    case 'I_COND': if (Ref.has('r_leak_cond')) return 'There is an oily stain on one of the return bends on the outdoor coil, and dirt is stuck to it. Soap solution on it bubbles. The coil has a pinhole leak.'; return Ref.has('r_dirty_cond') ? 'The outdoor coil is packed with cottonwood fluff and grease. Air barely passes through.' : 'The outdoor coil is clean.';
+    case 'I_DRIER': if (Ref.has('r_leak_braze')) return 'There is a thin film of oil around the braze joint at the drier outlet, and soap solution on the joint bubbles. The joint is leaking.'; return Ref.has('r_drier_restricted') && running ? 'The outlet end of the drier is noticeably colder than the inlet end, with a light frost. Flow looks restricted.' : 'The drier looks normal.';
+    case 'I_TXV': if (Ref.has('r_leak_flare')) return 'There is oil on the flare nut where the line meets the TXV, and soap solution on the nut bubbles. The flare fitting is leaking.'; return Ref.has('r_txv_restricted') && running ? 'The TXV body and first few inches of distributor tubes are frosted. Little flow is getting through.' : 'The TXV looks normal.';
     case 'I_DRAIN':
       if (Ref.has('r_drain_clog')) return Ref.fl ? 'The pan is full to the brim and water is standing around the float. The drain line is plugged with slime.' : 'There is a little water in the pan and it is not draining. The drain line is plugged with slime.';
       return 'The pan is nearly dry and the drain line runs clear. The float switch hangs down.';
@@ -4070,10 +4143,10 @@ function inspectText(id) {
       return Ref.iceT > 0.5 ? 'The freezestat is tripped (red light). Its sensing tube is woven across the evaporator coil face and the coil is frosted over. The switch recloses after the coil warms up.' : 'The freezestat body sits beside the coil with its sensing tube clipped across the coil face. The coil is cool and wet with no frost, so the switch is closed (green light).';
     case 'I_PFS':
       return Ref.has('r_filter_plugged') ? 'The filter face is plugged solid and the pressure switch is picking up a big drop across it.' : 'The tubes are clear and the filters pass air. The pressure drop across them looks small.';
-    case 'I_COMP': return { run: 'The compressor shell is warm and it runs smoothly with a steady low hum.', hum: 'The compressor is humming hard and not turning. The shell is getting hot.', rev: 'The compressor is running rough and loud, with a harsh rattle.', tripped: 'The compressor is off and the shell is hot to the touch. The internal overload has opened and needs time to cool.', off: 'The compressor is off and the shell is at outdoor air temperature.' }[s.comp] || '';
+    case 'I_COMP': if (Ref.has('r_leak_valve')) return 'There is an oily ring around the stem of the suction service valve, and soap solution on it bubbles. The valve stem packing is leaking.'; return { run: 'The compressor shell is warm and it runs smoothly with a steady low hum.', hum: 'The compressor is humming hard and not turning. The shell is getting hot.', rev: 'The compressor is running rough and loud, with a harsh rattle.', tripped: 'The compressor is off and the shell is hot to the touch. The internal overload has opened and needs time to cool.', off: 'The compressor is off and the shell is at outdoor air temperature.' }[s.comp] || '';
     case 'I_CFAN': return s.fan === 'run' ? 'The fan blade is spinning at full speed and the air blows up out of the top.' : s.fan === 'slow' ? 'The fan blade is turning slowly. You can see the blades. The motor sounds strained.' : 'The fan blade is not turning. You can spin it by hand and it feels free.';
     case 'I_BELT': {
-      if (!PARTS.belt) return 'This blower is direct drive. The wheel sits right on the motor shaft, so there is no belt to check.';
+      if (!PARTS.belt) return 'The blower is belt driven. The belt is snug, with about 1/2 inch of deflection at midspan. There are no cracks or glazing and the two pulleys are lined up.';
       const f = Sim.faults;
       if (f.has('belt_broken')) return 'The belt has snapped and is lying in the bottom of the blower housing. The motor pulley spins freely but the blower wheel does not turn.';
       if (f.has('belt_loose')) return 'The belt is old, cracked and glazed, and it has stretched. It deflects about 2 inches at midspan and slips on the motor pulley. There is black dust on the pulley guard and the blower wheel turns noticeably slower than the motor.';
@@ -4089,7 +4162,7 @@ function inspectText(id) {
 const REPAIRS = {
   I_DRAIN: [['drain', 'Vacuum drain line and treat pan'], ['floatsw', 'Replace float switch']], I_FRZ: [['freezestat', 'Replace freezestat']], I_PFS: [['pfs', 'Replace filter switch']],
   I_FILTER: [['filter', 'Replace filters']], I_EVAP: [['cleanevap', 'Clean coil'], ['evapcoil', 'Replace coil']],
-  I_COND: [['cleancond', 'Wash coil']], I_DRIER: [['drier', 'Replace drier']], I_TXV: [['txv', 'Replace TXV']], I_BELT: [['belt', 'Replace belt'], ['beltadj', 'Check and adjust belt tension']], PORT_SUCT: [['core', 'Replace valve core']], PORT_LIQ: [['corehi', 'Replace valve core']], PORT_SUCT_C2: [['core2', 'Replace valve core']], PORT_LIQ_C2: [['corehi2', 'Replace valve core']]
+  I_COND: [['cleancond', 'Wash coil'], ['condcoil', 'Replace coil']], I_DRIER: [['drier', 'Replace drier'], ['braze', 'Repair leaking joint']], I_TXV: [['txv', 'Replace TXV'], ['flare', 'Replace flare fitting']], I_COMP: [['valvepack', 'Replace stem packing']], I_BELT: [['belt', 'Replace belt'], ['beltadj', 'Check and adjust belt tension']], PORT_SUCT: [['core', 'Replace valve core']], PORT_LIQ: [['corehi', 'Replace valve core']], PORT_SUCT_C2: [['core2', 'Replace valve core']], PORT_LIQ_C2: [['corehi2', 'Replace valve core']]
 };
 
 function renderPicSel() {
@@ -4357,6 +4430,12 @@ const INSTR_FAULTS = [
     ['float_bad', 'Condensate float switch failed open', 'The unit will not start and the pan is dry. Follow 24 V through the safety string.'],
     ['frz_bad', 'Freezestat failed open', 'The unit will not start and the coil is clear. Follow 24 V through the safety string.'],
     ['pfs_bad', 'Dirty-filter switch failed open', 'The unit will not start and the filters are clean. Follow 24 V through the safety string.']]],
+  ['Safeties jumped out by a previous tech', [
+    ['jmp_hps', 'Jumper across the high-pressure switch', 'Look at the safety terminals in the control panel. A switch that should be able to open reads zero ohms.'],
+    ['jmp_lps', 'Jumper across the low-pressure switch', 'Look at the safety terminals in the control panel. The unit keeps running when it should have cut out.'],
+    ['jmp_float', 'Jumper across the condensate float switch', 'Look at the drain pan and the safety terminals. The unit runs with a full pan.'],
+    ['jmp_frz', 'Jumper across the freezestat', 'Look at the coil and the safety terminals. The unit keeps running with a frosted coil.'],
+    ['jmp_pfs', 'Jumper across the dirty-filter switch', 'Look at the filter switch and the safety terminals. The unit runs with plugged filters.']]],
   ['Refrigerant and airflow side', [
     ['r_dirty_filter', 'Dirty filters', 'Airflow is down and the coil may ice up, opening the freezestat. Look at what the air passes through before the coil.'],
     ['r_filter_plugged', 'Filters plugged', 'Airflow is very poor. Check the filters and the switch that watches them.'],
@@ -4365,6 +4444,10 @@ const INSTR_FAULTS = [
     ['r_leak_core', 'Leaking Schrader valve core, low side (low charge)', 'Superheat is high and subcooling is low. Soap-test the service ports.'],
     ['r_leak_core_hi', 'Leaking Schrader valve core, high side (low charge)', 'Superheat is high and subcooling is low. Soap-test both service ports, including the liquid line one.'],
     ['r_leak_coil', 'Leaking evaporator coil (low charge)', 'Superheat is high and subcooling is low, and the ports are tight. Look at the coil.'],
+    ['r_leak_cond', 'Leaking condenser coil, pinhole (low charge)', 'The charge keeps dropping and the ports are tight. Check the outdoor coil closely.'],
+    ['r_leak_braze', 'Leaking braze joint at the filter drier (fast leak)', 'The charge drops fast and the ports are tight. Look for oil along the liquid line.'],
+    ['r_leak_flare', 'Leaking flare fitting at the TXV (slow leak)', 'The charge drops slowly and the ports are tight. Look for oil at the metering device.'],
+    ['r_leak_valve', 'Leaking service valve stem packing (very slow leak)', 'The charge drops very slowly and the ports are tight. Look at the service valves at the compressor.'],
     ['r_drain_clog', 'Plugged condensate drain', 'The pan fills when the unit runs. Check the drain line.'],
     ['r_txv_restricted', 'Restricted TXV', 'Suction pressure is low with high superheat, and the liquid line is warm. Check the metering device.'],
     ['r_drier_restricted', 'Restricted filter drier', 'There is a big temperature drop across one component in the liquid line.'],
@@ -4373,7 +4456,7 @@ const INSTR_FAULTS = [
 const INSTR_ALL = {}; INSTR_FAULTS.forEach(g => g[1].forEach(f => { INSTR_ALL[f[0]] = f; }));
 
 const CUSTOM_LEVELS = [{ id: 9001, n: 1, title: 'Instructor job', rank: 'Assigned job', site: '5-ton 3-phase rooftop package unit, 208 V', ticket: '', faults: [], par: 5, guide: false, hints: [] }];
-let instrUnlocked = false, instrDraft = { title: '', site: '5-ton 3-phase rooftop package unit, 208 V', ticket: '', faults: [], guide: false };
+let instrUnlocked = false, instrDraft = { title: '', site: '5-ton 3-phase rooftop package unit, 208 V', ticket: '', faults: [], guide: false, nominal: null, charge: null, tamb: null };
 try { const d = JSON.parse(localStorage.getItem('put_instr_draft') || 'null'); if (d && Array.isArray(d.faults)) instrDraft = Object.assign(instrDraft, d); } catch (e) {}
 const instrSave = () => { try { localStorage.setItem('put_instr_draft', JSON.stringify(instrDraft)); } catch (e) {} };
 
@@ -4389,14 +4472,15 @@ function instrDecode(code) {
     const bin = atob(code.slice(5)); let raw = '';
     for (let i = 0; i < bin.length; i++) raw += String.fromCharCode(bin.charCodeAt(i) ^ INSTR_KEY.charCodeAt(i % INSTR_KEY.length));
     const j = JSON.parse(decodeURIComponent(escape(raw)));
-    if (!j || !Array.isArray(j.faults) || !j.faults.length || !j.faults.every(f => INSTR_ALL[f])) return null;
-    return { title: String(j.title || '').slice(0, 80), site: String(j.site || '').slice(0, 120), ticket: String(j.ticket || '').slice(0, 600), faults: j.faults, guide: !!j.guide };
+    if (!j || !Array.isArray(j.faults) || !j.faults.every(f => INSTR_ALL[f]) || (!j.faults.length && (j.charge === null || j.charge === undefined))) return null;
+    const num = (v, a, b) => (v === null || v === undefined || v === '' || isNaN(+v)) ? null : Math.max(a, Math.min(b, +v));
+    return { title: String(j.title || '').slice(0, 80), site: String(j.site || '').slice(0, 120), ticket: String(j.ticket || '').slice(0, 600), faults: j.faults, guide: !!j.guide, nominal: num(j.nominal, 3, 20), charge: num(j.charge, 0, 20), tamb: num(j.tamb, 50, 120) };
   } catch (e) { return null; }
 }
 function instrApply(job) {
   const L = CUSTOM_LEVELS[0], fl = job.faults.slice();
-  const lowCharge = fl.some(f => f === 'r_leak_core' || f === 'r_leak_core_hi' || f === 'r_leak_coil');
-  Object.assign(L, { title: job.title || 'Service call', site: job.site || '5-ton 3-phase rooftop package unit, 208 V', ticket: job.ticket || 'The unit is not cooling.', faults: fl, par: 4 + 3 * fl.length, guide: !!job.guide, hints: [], nominal: 9, charge: lowCharge ? 6.2 : undefined });
+  const lowCharge = fl.some(f => LEAK_RATE[f]), nom = job.nominal || 9;
+  Object.assign(L, { title: job.title || 'Service call', site: job.site || '5-ton 3-phase rooftop package unit, 208 V', ticket: job.ticket || 'The unit is not cooling.', faults: fl, par: 4 + 3 * fl.length, guide: !!job.guide, hints: [], nominal: nom, charge: job.charge != null ? job.charge : (lowCharge ? Math.round(nom * 0.69 * 10) / 10 : undefined), tamb: job.tamb || undefined });
   doneSet.delete(L.id);
 }
 function instrStart(job) { instrApply(job); startLevel(0); }
@@ -4454,7 +4538,13 @@ function instrEditSheet() {
     <div class="fld"><label for="iSite">Unit description</label><input id="iSite" type="text" maxlength="120" value="${esc(d.site)}"></div>
     <div class="fld"><label for="iTicket">Customer complaint</label><textarea id="iTicket" rows="3" maxlength="600" placeholder="Office says it is warm inside and nothing seems to be happening.">${esc(d.ticket)}</textarea></div>
     <div class="fld"><label>Faults to put in the unit <span class="dim" id="iCnt"></span></label>
-      <div class="ifaults">${INSTR_FAULTS.map(g => `<fieldset><legend>${esc(g[0])}</legend>` + g[1].map(f => `<label class="chk"><input type="checkbox" data-f="${f[0]}"${d.faults.indexOf(f[0]) >= 0 ? ' checked' : ''}> ${esc(f[1])}</label>`).join('') + '</fieldset>').join('')}</div></div>
+      <div class="ifaults">${INSTR_FAULTS.map((g, gi) => `<details class="igrp" data-g="${gi}"${g[1].some(f => d.faults.indexOf(f[0]) >= 0) ? ' open' : ''}><summary>${esc(g[0])} <span class="dim igc"></span></summary>` + g[1].map(f => `<label class="chk"><input type="checkbox" data-f="${f[0]}"${d.faults.indexOf(f[0]) >= 0 ? ' checked' : ''}> ${esc(f[1])}</label>`).join('') + '</details>').join('')}</div></div>
+    <div class="fld"><label>Refrigerant and conditions <span class="dim">(leave a box empty for the automatic value)</span></label>
+      <div class="irow"><div><label for="iNom" class="dim">Rated charge on the data plate (lb)</label><input id="iNom" type="number" min="3" max="20" step="0.1" placeholder="9" value="${d.nominal == null ? '' : d.nominal}"></div>
+      <div><label for="iChg" class="dim">Charge actually in the unit (lb)</label><input id="iChg" type="number" min="0" max="20" step="0.1" placeholder="auto" value="${d.charge == null ? '' : d.charge}"></div>
+      <div><label for="iAmb" class="dim">Outdoor temperature (°F)</label><input id="iAmb" type="number" min="50" max="120" step="1" placeholder="auto" value="${d.tamb == null ? '' : d.tamb}"></div></div>
+      <div class="row" style="justify-content:flex-start;flex-wrap:wrap;margin-top:6px"><span class="dim" id="iPct"></span>${[['Empty', 0], ['50%', .5], ['75%', .75], ['Rated', 1], ['125%', 1.25], ['150%', 1.5]].map(x => `<button class="btn" type="button" data-pct="${x[1]}">${x[0]}</button>`).join('')}</div>
+      <p class="dim" style="font-size:12px;margin:4px 0">Undercharged or overcharged with no leak: set the charge and pick no leak. Loss of charge: pick a leak and set the starting charge. A leak keeps draining the charge while the unit sits or runs.</p></div>
     <label class="chk"><input type="checkbox" id="iGuide"${d.guide ? ' checked' : ''}> Show the normal-readings guide to the trainee</label>
     <p class="iErr" id="iErr"></p>
     <div class="row" style="justify-content:flex-start;flex-wrap:wrap"><button class="btn go" id="iStart" type="button">Start job here</button><button class="btn" id="iCodeBtn" type="button">Make a job code</button><button class="btn" id="iLock" type="button">Lock and exit</button></div>
@@ -4466,13 +4556,18 @@ function instrEditSheet() {
   $('sheet').classList.add('wide');
   const read = () => {
     d.title = $('iTitle').value.trim(); d.site = $('iSite').value.trim(); d.ticket = $('iTicket').value.trim(); d.guide = $('iGuide').checked;
-    d.faults = [...document.querySelectorAll('#sheet [data-f]')].filter(c => c.checked).map(c => c.dataset.f); instrSave();
+    d.faults = [...document.querySelectorAll('#sheet [data-f]')].filter(c => c.checked).map(c => c.dataset.f);
+    const nv = (id, a, b) => { const v = $(id).value.trim(); return v === '' || isNaN(+v) ? null : Math.max(a, Math.min(b, +v)); };
+    d.nominal = nv('iNom', 3, 20); d.charge = nv('iChg', 0, 20); d.tamb = nv('iAmb', 50, 120); instrSave();
+    { const n = d.nominal || 9; $('iPct').textContent = d.charge == null ? 'Charge: automatic' : 'Charge: ' + d.charge + ' lb = ' + Math.round(d.charge / n * 100) + '% of rated'; }
+    document.querySelectorAll('#sheet .igrp').forEach(g => { const n = g.querySelectorAll('[data-f]:checked').length; g.querySelector('.igc').textContent = n ? '(' + n + ' selected)' : ''; });
     $('iCnt').textContent = '(' + d.faults.length + ' selected)'; return d;
   };
   $('sheet').oninput = read; $('sheet').onchange = read; read();
-  const ok = () => { const j = read(); if (!j.faults.length) { $('iErr').textContent = 'Pick at least one fault.'; return null; } $('iErr').textContent = ''; return j; };
+  document.querySelectorAll('#sheet [data-pct]').forEach(b => { b.onclick = () => { $('iChg').value = Math.round((d.nominal || 9) * +b.dataset.pct * 10) / 10; read(); }; });
+  const ok = () => { const j = read(); if (!j.faults.length && (j.charge == null || Math.abs(j.charge - (j.nominal || 9)) <= 0.5)) { $('iErr').textContent = 'Pick at least one fault, or set a charge that is not the rated amount.'; return null; } $('iErr').textContent = ''; return j; };
   $('iStart').onclick = () => { const j = ok(); if (j) { $('sheet').classList.remove('wide'); instrUnlocked = false; instrStart(j); } };
-  $('iCodeBtn').onclick = () => { const j = ok(); if (!j) return; const code = instrEncode({ title: j.title, site: j.site, ticket: j.ticket, faults: j.faults, guide: j.guide }); $('iOut').value = code; $('iLink').value = instrLink(code); $('iCodeBox').hidden = false; $('iOut').select(); jsonLine(); };
+  $('iCodeBtn').onclick = () => { const j = ok(); if (!j) return; const code = instrEncode({ title: j.title, site: j.site, ticket: j.ticket, faults: j.faults, guide: j.guide, nominal: j.nominal, charge: j.charge, tamb: j.tamb }); $('iOut').value = code; $('iLink').value = instrLink(code); $('iCodeBox').hidden = false; $('iOut').select(); jsonLine(); };
   const instrLink = v => instrLinkFor(v);
   const jsonLine = () => { const n = ($('iName').value.trim().toLowerCase().replace(/\s+/g, '-') || 'job-name'); $('iJson').value = '  ' + JSON.stringify(n) + ': ' + JSON.stringify($('iOut').value); };
   $('iName').oninput = jsonLine;
@@ -4490,15 +4585,15 @@ function instrOpenSetup() { active = false; if (instrUnlocked) instrEditSheet();
 /* ===== Pressure-washer coil cleaning: the student has to work the wand over the whole coil ===== */
 let washState = null;
 function washCoil(k, done) {
-  const cond = k === 'cleancond', W = 720, H = 420, R = 52;
+  const cond = k === 'cleancond', W = 720, H = 420, TAP = isBoard(), R = TAP ? 78 : 52;
   sheet(`<div class="kick">${cond ? 'Condenser coil, outdoor' : 'Evaporator coil, indoor'} · Pressure washer</div><h3>Wash the coil</h3>
-    <p style="color:var(--dim);margin:2px 0 8px">Disconnect is open. Hold the mouse button (or your finger) down to spray, and sweep the wand across the coil in slow, overlapping passes. ${cond ? 'Work the whole face, including the corners and the bottom rows.' : 'Get into the corners and along the bottom.'} Anything you skip stays dirty.</p>
+    <p style="color:var(--dim);margin:2px 0 8px">Disconnect is open. ${TAP ? 'Tap a spot on the coil to blast it with the washer. Keep tapping spot after spot, overlapping, until the whole coil is clean.' : 'Hold the mouse button (or your finger) down to spray, and sweep the wand across the coil in slow, overlapping passes.'} ${cond ? 'Work the whole face, including the corners and the bottom rows.' : 'Get into the corners and along the bottom.'} Anything you skip stays dirty.</p>
     <canvas id="washCv" width="${W}" height="${H}" style="width:100%;touch-action:none;border-radius:6px;border:1px solid var(--line);cursor:none;display:block;background:#10151b"></canvas>
     <div style="height:10px;background:var(--panel2);border-radius:5px;margin:10px 0 4px;overflow:hidden"><div id="washBar" style="height:100%;width:0;background:var(--blue);transition:width .2s"></div></div>
     <div class="row" style="justify-content:space-between"><span id="washPct" class="dim" style="font-family:var(--mono)">0% clean</span><button class="btn" id="washCancel" type="button">Stop washing</button></div>`);
   $('sheet').classList.add('wide', 'big');
   const cv = $('washCv'), g = cv.getContext('2d');
-  const fit = () => { const sh = $('sheet'); if (!sh || !$('washCv')) return; const maxW = sh.clientWidth - 44, maxH = window.innerHeight * .96 - 250; cv.style.width = Math.max(300, Math.min(maxW, maxH * W / H)) + 'px'; cv.style.margin = '0 auto'; };
+  const fit = () => { const sh = $('sheet'); if (!sh || !$('washCv')) return; const maxW = sh.clientWidth - 44, bz = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--bz')) || 1, maxH = window.innerHeight / bz * .96 - 250; cv.style.width = Math.max(300, Math.min(maxW, maxH * W / H)) + 'px'; cv.style.margin = '0 auto'; };
   fit(); window.addEventListener('resize', fit);
   const mk = () => { const c = document.createElement('canvas'); c.width = W; c.height = H; return c; };
   let seed = cond ? 11 : 5; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
@@ -4535,11 +4630,11 @@ function washCoil(k, done) {
   /* the casing only gets a light film so the student works the coil face */
   /* ---- state ---- */
   const GW = 72, GH = 44, tmp = document.createElement('canvas'); tmp.width = GW; tmp.height = GH; const tg = tmp.getContext('2d', { willReadFrequently: true });
-  let ptr = null, spray = false, last = performance.now(), parts = [], runoff = [], wet = [], finished = false, raf = 0, frameN = 0, pct = 0, fade = 0;
+  let burst = 0, ptr = null, spray = false, last = performance.now(), parts = [], runoff = [], wet = [], finished = false, raf = 0, frameN = 0, pct = 0, fade = 0;
   const pos = e => { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height }; };
-  cv.onpointerdown = e => { e.preventDefault(); cv.setPointerCapture(e.pointerId); ptr = pos(e); spray = true; };
-  cv.onpointermove = e => { ptr = pos(e); };
-  cv.onpointerup = cv.onpointercancel = () => { spray = false; };
+  cv.onpointerdown = e => { e.preventDefault(); ptr = pos(e); if (TAP) { spray = true; clearTimeout(burst); burst = setTimeout(() => { spray = false; }, 750); return; } cv.setPointerCapture(e.pointerId); spray = true; };
+  cv.onpointermove = e => { if (!TAP) ptr = pos(e); };
+  cv.onpointerup = cv.onpointercancel = () => { if (!TAP) spray = false; };
   const stop = () => { cancelAnimationFrame(raf); washState = null; };
   $('washCancel').onclick = () => { stop(); $('modal').hidden = true; };
   const measure = () => {
@@ -4614,12 +4709,13 @@ function filterSwap(done) {
   const BAG = { x: 790, y: 350, w: 120, h: 130 };
   let uid = 0; const items = [];
   for (let i = 0; i < N; i++) items.push({ id: ++uid, kind: 'old', size: truth, arrowRight: true, x: slotX(i), y: CY, slot: i });
+  const TAP = isBoard(), HAND = { x: 470, y: 392 };
   const st = { door: 'on', latch: [false, false], msg: '', bad: false, bagged: 0, drag: null, over: null };
   const say = (m, bad) => { st.msg = m; st.bad = !!bad; };
   const step = () => st.door === 'on' ? '1. Turn both latches on the access door to open it.' :
-    items.some(x => x.kind === 'old') ? '2. Slide each old filter out and drop it in the trash bag. Read its size first.' :
-    items.filter(x => x.kind === 'new' && x.slot != null).length < N ? '3. Take the same size from the shelf. Double-click a filter to turn it so the arrow points toward the coil, then slide it into the slot.' :
-    '4. Click the access door to hang it back on.';
+    items.some(x => x.kind === 'old') ? (TAP ? '2. Tap each old filter to pull it out and bag it. Read its size first.' : '2. Slide each old filter out and drop it in the trash bag. Read its size first.') :
+    items.filter(x => x.kind === 'new' && x.slot != null).length < N ? (TAP ? '3. Tap the same size on the shelf. Tap TURN so the arrow points toward the coil, then tap the empty slot to put it in.' : '3. Take the same size from the shelf. Double-click a filter to turn it so the arrow points toward the coil, then slide it into the slot.') :
+    '4. ' + (TAP ? 'Tap' : 'Click') + ' the access door to hang it back on.';
   const filt = it => {
     const d = dim(it.size), w = d[0] * PX, h = d[1] * PX, dirty = it.kind === 'old', hw = w / 2, hh = h / 2, fr = Math.max(4, PX * .8);
     const dep = d[2] * PX, kx = dep * .85, ky = -dep * .55;
@@ -4657,7 +4753,7 @@ function filterSwap(done) {
     /* shelf with cartons */
     s += `<rect x="706" y="214" width="236" height="6" fill="#4a3d2a"/>`;
     cartons.forEach((c, i) => { const x = 712 + i * 74; s += `<g class="ct" data-size="${c}" style="cursor:grab"><rect x="${x}" y="150" width="66" height="64" fill="#c9a870" stroke="#6b5835" stroke-width="1.5"/><rect x="${x + 4}" y="156" width="58" height="26" fill="#fff"/><text x="${x + 33}" y="168" text-anchor="middle" font-size="8.5" font-family="monospace" font-weight="700" fill="#222">${c.replace(/x/g, '×')}</text><text x="${x + 33}" y="178" text-anchor="middle" font-size="6.5" font-family="monospace" fill="#444">MERV 8</text><text x="${x + 33}" y="198" text-anchor="middle" font-size="7" fill="#5b4624" font-family="monospace">12 PACK</text></g>`; });
-    s += `<text x="824" y="140" text-anchor="middle" font-size="9" fill="#9aa8b5" font-family="monospace" letter-spacing="1.2">NEW FILTERS · DRAG ONE</text>`;
+    s += `<text x="824" y="140" text-anchor="middle" font-size="9" fill="#9aa8b5" font-family="monospace" letter-spacing="1.2">NEW FILTERS · ${TAP ? 'TAP ONE' : 'DRAG ONE'}</text>`;
     /* trash bag */
     s += `<g class="bg"><path d="M${BAG.x + 14} ${BAG.y + 14} Q${BAG.x - 6} ${BAG.y + 70} ${BAG.x + 8} ${BAG.y + BAG.h} H${BAG.x + BAG.w - 8} Q${BAG.x + BAG.w + 8} ${BAG.y + 70} ${BAG.x + BAG.w - 14} ${BAG.y + 14} Q${BAG.x + BAG.w / 2} ${BAG.y - 8} ${BAG.x + 14} ${BAG.y + 14}Z" fill="${st.over === 'bag' ? '#2b3a48' : '#171b20'}" stroke="#394552" stroke-width="2"/><path d="M${BAG.x + 40} ${BAG.y + 8} q20 -22 40 0" stroke="#171b20" stroke-width="7" fill="none"/><text x="${BAG.x + BAG.w / 2}" y="${BAG.y + 78}" text-anchor="middle" font-size="10" fill="#7e8c99" font-family="monospace" letter-spacing="1.5">TRASH${st.bagged ? ' · ' + st.bagged : ''}</text></g>`;
     items.filter(x => x.slot != null).forEach(x => { s += filt(x); });
@@ -4665,6 +4761,7 @@ function filterSwap(done) {
     N && 0;
     items.filter(x => x.slot == null && x !== st.drag).forEach(x => { s += filt(x); });
     if (st.drag) s += filt(st.drag);
+    if (TAP && st.hand && items.indexOf(st.hand) >= 0) s += `<g class="tbt" style="cursor:pointer"><rect x="${HAND.x + 120}" y="${HAND.y - 34}" width="130" height="50" rx="8" fill="#2d6cdf" stroke="#9cc0ff" stroke-width="3"/><text x="${HAND.x + 185}" y="${HAND.y - 3}" text-anchor="middle" font-size="18" font-weight="700" font-family="monospace" fill="#fff">TURN</text></g><g class="tbk" style="cursor:pointer"><rect x="${HAND.x + 120}" y="${HAND.y + 26}" width="130" height="44" rx="8" fill="#3a4650" stroke="#8b99a6" stroke-width="2"/><text x="${HAND.x + 185}" y="${HAND.y + 54}" text-anchor="middle" font-size="14" font-weight="700" font-family="monospace" fill="#e8edf2">PUT BACK</text></g>`;
     /* access door */
     if (st.door === 'on') {
       s += `<g id="fdoor"><rect x="${RX - 6}" y="${RY - 10}" width="${RW + 12}" height="${RH + 20}" rx="3" fill="url(#fmet)" stroke="#2a323a" stroke-width="3"/>`;
@@ -4706,6 +4803,23 @@ function filterSwap(done) {
         st.door = 'on'; say('Door latched. Filters changed.'); draw(); setTimeout(() => { $('modal').hidden = true; done(); }, 900); return;
       }
       if (st.door === 'on') { if (ct || fi) { say('Open the access door first.', true); draw(); } return; }
+      if (TAP) {
+        const tb = e.target.closest('.tbt'), tk = e.target.closest('.tbk');
+        const placeHand = si => { const it = st.hand;
+          if (!it) return say('Tap a new filter on the shelf first.', true);
+          if (items.some(x => x.slot === si)) return say('There is already a filter in that slot.', true);
+          if (it.size !== truth) return say(it.size + ' does not fit this rack. It sits loose with a gap along one side and dirty air bypasses it. Check the size on the old filter. Put it back and tap the right one.', true);
+          if (!it.arrowRight) return say('The arrow points toward the return grille. Airflow arrows go toward the coil. Tap TURN, then tap the slot again.', true);
+          it.slot = si; it.x = slotX(si); it.y = CY; st.hand = null; say('Seated. Arrow toward the coil.'); };
+        if (tb) { if (st.hand) { st.hand.arrowRight = !st.hand.arrowRight; say('Turned it around.'); } draw(); return; }
+        if (tk) { if (st.hand) { items.splice(items.indexOf(st.hand), 1); st.hand = null; say('Put it back in the carton.'); } draw(); return; }
+        if (ct) { if (st.hand) items.splice(items.indexOf(st.hand), 1); const it = { id: ++uid, kind: 'new', size: ct.dataset.size, arrowRight: (uid % 2 === 0), x: HAND.x, y: HAND.y, slot: null }; items.push(it); st.hand = it; say('Got a ' + it.size + ' filter. Tap TURN if the arrow is wrong, then tap the empty slot.'); draw(); return; }
+        const fit = fi ? items.find(x => x.id === +fi.dataset.id) : null;
+        if (fit && fit.kind === 'old' && fit.slot != null) { puff(fit.x, fit.y); items.splice(items.indexOf(fit), 1); st.bagged++; say('Old filter size: ' + fit.size + '. Packed with lint. Bagged. Now take a ' + truth + ' from the shelf.'); draw(); return; }
+        if (fit && fit === st.hand) { fit.arrowRight = !fit.arrowRight; say('Turned it around.'); draw(); return; }
+        const si = slotAt(p); if (si >= 0) { placeHand(si); draw(); }
+        return;
+      }
       let it = null;
       if (ct) { const o = dim(ct.dataset.size); it = { id: ++uid, kind: 'new', size: ct.dataset.size, arrowRight: (uid % 2 === 0), x: p.x, y: p.y, slot: null }; items.push(it); }
       else if (fi) { it = items.find(x => x.id === +fi.dataset.id); if (it) { const t = Date.now(); if (lastId === it.id && t - lastClick < 380 && it.kind === 'new') { it.arrowRight = !it.arrowRight; say('Turned it around.'); lastId = 0; draw(); return; } lastId = it.id; lastClick = t; } }
@@ -4737,13 +4851,13 @@ function filterSwap(done) {
 
 /* ===== Condensate drain job: vacuum the PVC drain line, test it, drop pan treatment tablets in the pan ===== */
 function drainJob(done) {
-  const VW = 960, VH = 470, END = { x: 668, y: 384 };
+  const TAP = isBoard(), VW = 960, VH = 470, END = { x: 668, y: 384 };
   const st = { stage: 0, prog: 0, attached: false, nz: { x: 760, y: 252 }, vac: false, pour: 0, tabs: [], drag: null, msg: '', bad: false, lvl: 1, t: 0, tabsIn: 0 };
   const say = (m, bad) => { st.msg = m; st.bad = !!bad; };
-  const hint = () => st.stage === 0 ? '1. Drag the vacuum hose onto the end of the PVC drain line outside the unit.' :
-    st.stage === 1 ? '2. Hold the vacuum button. Pull the slime and standing water out of the line until the pan is empty.' :
+  const hint = () => st.stage === 0 ? (TAP ? '1. Tap the vacuum hose to push it onto the end of the PVC drain line.' : '1. Drag the vacuum hose onto the end of the PVC drain line outside the unit.') :
+    st.stage === 1 ? (TAP ? '2. Tap the vacuum button to run it. Let it pull the slime and water out until the pan is empty.' : '2. Hold the vacuum button. Pull the slime and standing water out of the line until the pan is empty.') :
     st.stage === 2 ? '3. Take the hose off and pour a cup of water in the pan to test that it runs freely.' :
-    '4. Drag two pan treatment tablets from the bottle into the drain pan.';
+    (TAP ? '4. Tap the tablet bottle twice to drop two pan treatment tablets into the drain pan.' : '4. Drag two pan treatment tablets from the bottle into the drain pan.');
   const scene = () => {
     const wl = Math.max(0, st.lvl), panT = 192, panB = 268, wy = panB - 8 - wl * 46, T = st.t, murk = Math.min(1, st.lvl * 1.1 + (st.stage < 2 ? 0 : 0));
     const dirty = st.stage < 2;
@@ -4837,7 +4951,7 @@ function drainJob(done) {
     sheet(`<div class="kick">Condensate drain pan and line</div><h3>Clear the drain</h3><div id="drStep" style="color:var(--yellow);font:600 13px var(--body);margin:4px 0 8px"></div>
       <svg id="drSvg" viewBox="0 0 ${VW} ${VH}" style="width:100%;border-radius:6px;border:1px solid var(--line);display:block;touch-action:none;user-select:none"></svg>
       <div class="row" style="justify-content:space-between;margin-top:8px"><div id="drMsg" style="font-size:13px;min-height:36px;flex:1"></div></div>
-      <div class="row" style="justify-content:space-between;align-items:center"><div class="row"><button class="btn go" id="drVac" type="button" disabled>Hold to run the vacuum</button><button class="btn" id="drPour" type="button" disabled>Pour a cup of water in the pan</button></div><button class="btn" id="drStop" type="button">Stop</button></div>`);
+      <div class="row" style="justify-content:space-between;align-items:center"><div class="row"><button class="btn go" id="drVac" type="button" disabled>${TAP ? 'Tap to run the vacuum' : 'Hold to run the vacuum'}</button><button class="btn" id="drPour" type="button" disabled>Pour a cup of water in the pan</button></div><button class="btn" id="drStop" type="button">Stop</button></div>`);
     $('sheet').classList.add('wide', 'big'); $('drStop').onclick = () => { alive = false; $('modal').hidden = true; };
     draw(); wire();
   };
@@ -4845,6 +4959,7 @@ function drainJob(done) {
   let rq = 0; const drawR = () => { if (rq) return; rq = requestAnimationFrame(() => { rq = 0; if ($('drSvg')) draw(); }); };
   const draw = () => {
     $('drSvg').innerHTML = scene(); $('drStep').textContent = hint(); const m = $('drMsg'); m.textContent = st.msg; m.style.color = st.bad ? '#ffb3ac' : 'var(--dim)';
+    if (TAP) $('drVac').textContent = st.vac ? 'Vacuum running · tap to pause' : 'Tap to run the vacuum';
     $('drVac').disabled = !(st.stage === 1); $('drPour').disabled = !(st.stage === 2) || st.pour > 0;
   };
   const pt = e => { const sv = $('drSvg'), p = sv.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; const q = p.matrixTransform(sv.getScreenCTM().inverse()); return { x: q.x, y: q.y }; };
@@ -4852,6 +4967,17 @@ function drainJob(done) {
     const sv = $('drSvg'); let off = { x: 0, y: 0 }, kind = null;
     sv.onpointerdown = e => {
       const p = pt(e);
+      if (TAP) {
+        if (e.target.closest('.nz') && !st.attached) { st.nz = { x: END.x - 50, y: END.y }; st.attached = true; st.stage = 1; say('Hose pushed on over the end of the line. Tap the vacuum button to run it.'); draw(); return; }
+        if (e.target.closest('.bt')) {
+          if (st.stage < 3) { say(st.stage === 0 ? 'Clear the line first. Treating a plugged pan does nothing.' : 'Finish clearing and testing the line first.', true); draw(); return; }
+          if ((st.tabsIn || 0) >= 2) return;
+          st.tabs.push({ x: 140 + st.tabs.length * 110, y: 252, in: true, n: st.tabs.length }); st.tabsIn = st.tabs.filter(q => q.in).length;
+          say(st.tabsIn + ' tablet' + (st.tabsIn > 1 ? 's' : '') + ' in the pan. They dissolve slowly with the condensate.'); draw();
+          if (st.tabsIn >= 2 && alive) { alive = false; setTimeout(() => { $('modal').hidden = true; done(); }, 1000); }
+        }
+        return;
+      }
       if (e.target.closest('.nz') && !st.attached) { kind = 'nz'; off = { x: st.nz.x - p.x, y: st.nz.y - p.y }; sv.setPointerCapture(e.pointerId); return; }
       if (e.target.closest('.bt')) { if (st.stage < 3) { say(st.stage === 0 ? 'Clear the line first. Treating a plugged pan does nothing.' : 'Finish clearing and testing the line first.', true); draw(); return; } const t = { x: p.x, y: p.y, in: false, n: st.tabs.length }; st.tabs.push(t); st.drag = t; kind = 'tb'; sv.setPointerCapture(e.pointerId); draw(); return; }
       const tb = e.target.closest('.tb'); if (tb) { const t = st.tabs.find(q => !q.in && Math.abs(q.x - p.x) < 16 && Math.abs(q.y - p.y) < 10); if (t) { st.drag = t; kind = 'tb'; sv.setPointerCapture(e.pointerId); } }
@@ -4864,7 +4990,8 @@ function drainJob(done) {
       draw();
     };
     const vac = $('drVac'), hold = on => { if (st.stage !== 1) return; st.vac = on; };
-    vac.onpointerdown = e => { e.preventDefault(); hold(true); }; vac.onpointerup = vac.onpointerleave = vac.onpointercancel = () => hold(false);
+    if (TAP) vac.onclick = () => { if (st.stage === 1 && st.attached) { st.vac = !st.vac; say(st.vac ? 'Vacuum running. Let it pull the line clear.' : 'Vacuum paused.'); draw(); } };
+    else { vac.onpointerdown = e => { e.preventDefault(); hold(true); }; vac.onpointerup = vac.onpointerleave = vac.onpointercancel = () => hold(false); }
     vac.onkeydown = e => { if (e.key === ' ' || e.key === 'Enter') hold(true); }; vac.onkeyup = () => hold(false);
     $('drPour').onclick = () => { if (st.stage === 2 && !st.pour) { st.pour = 1; st.lvl = 0.35; say('Poured a cup of water in. Watch the pan.'); draw(); } };
   };
@@ -4881,16 +5008,16 @@ function drainJob(done) {
 /* ===== Blower belt job: two stations. At the MOTOR: loosen the bolts and slide it in, later slide it back and lock it down. At the BELT: take the old cogged belt off and put the new one on. ===== */
 function beltJob(mode, variant, done) {
   /* mode: 'replace' or 'adj'. variant: 'worn' (old, cracked, glazed), 'broken', 'good' (good belt that is just loose) */
-  const VW = 960, VH = 500, BS = { x: 235, y: 245, R: 78 }, MSY = 318, M0 = 430, MRANGE = 95, rS = 34;
+  const TAP = isBoard(), VW = 960, VH = 500, BS = { x: 235, y: 245, R: 78 }, MSY = 318, M0 = 430, MRANGE = 95, rS = 34;
   const SIZES = ['AX42', 'AX46', 'AX50', 'BX46', 'BX50', 'BX54'], seed = li * 5 + CUR.key.charCodeAt(0), truth = SIZES[seed % SIZES.length];
   const opts = [truth, SIZES[(seed + 1) % SIZES.length], SIZES[(seed + 4) % SIZES.length]].sort((a, b) => ((a.charCodeAt(2) * 17 + seed) % 5) - ((b.charCodeAt(2) * 17 + seed) % 5));
   const st = { view: 'belt', stage: 0, bolts: [true, true, true, true], t: mode === 'adj' ? 0.14 : 0.62, beltOn: variant !== 'broken', newBelt: false, drag: null, msg: '', bad: false, guard: false };
   const say = (m, bad) => { st.msg = m; st.bad = !!bad; };
   const defl = t => Math.max(0.08, 1.45 - 1.6 * t), tl = truth.slice(0, 2) + ' ' + truth.slice(2);
   const hint = () => {
-    if (st.view === 'motor') return st.stage === 0 ? '1. Loosen the four motor mounting bolts. Click each one.' : st.stage === 1 ? '2. Drag the motor toward the blower (left) until the belt goes slack. Then go back to the belt.' : st.stage === 4 ? (st.bolts.some(b => b) && st.bolts.some(b => !b) ? '5. Keep tightening. Click each remaining bolt.' : '5. Drag the motor away from the blower until the deflection reads about ½ in. Then tighten the four bolts. Click each one.') : 'Nothing more to do at the motor right now. Go back to the belt.';
-    return st.stage === 0 || st.stage === 1 ? '1. Go to the motor: click it. Loosen the bolts and slide it toward the blower.' : st.stage === 2 ? (variant === 'broken' ? '3. Pull the pieces of the broken belt out and drop them in the trash.' : '3. The belt is slack. Slip it off the sheaves. Drag it to the trash. Read the number on it first.') :
-      st.stage === 3 ? '4. Drag the same belt number from the shelf onto the sheaves. Then go back to the motor.' : st.stage === 4 ? '5. Go back to the motor (click it) to set the tension and lock it down.' : '6. Put the belt guard back on. Click it.';
+    if (st.view === 'motor') return st.stage === 0 ? '1. Loosen the four motor mounting bolts. Click each one.' : st.stage === 1 ? (TAP ? '2. Tap SLIDE IN until the belt goes slack. Then go back to the belt.' : '2. Drag the motor toward the blower (left) until the belt goes slack. Then go back to the belt.') : st.stage === 4 ? (st.bolts.some(b => b) && st.bolts.some(b => !b) ? '5. Keep tightening. Click each remaining bolt.' : (TAP ? '5. Tap SLIDE OUT until the deflection reads about ½ in. Then tap each of the four bolts to tighten them.' : '5. Drag the motor away from the blower until the deflection reads about ½ in. Then tighten the four bolts. Click each one.')) : 'Nothing more to do at the motor right now. Go back to the belt.';
+    return st.stage === 0 || st.stage === 1 ? '1. Go to the motor: click it. Loosen the bolts and slide it toward the blower.' : st.stage === 2 ? (variant === 'broken' ? (TAP ? '3. Tap the broken belt to clear it out.' : '3. Pull the pieces of the broken belt out and drop them in the trash.') : (TAP ? '3. The belt is slack. Tap the old belt to take it off and bin it.' : '3. The belt is slack. Slip it off the sheaves. Drag it to the trash. Read the number on it first.')) :
+      st.stage === 3 ? (TAP ? '4. Tap the same belt number on the shelf to put it on the sheaves. Then go back to the motor.' : '4. Drag the same belt number from the shelf onto the sheaves. Then go back to the motor.') : st.stage === 4 ? '5. Go back to the motor (click it) to set the tension and lock it down.' : '6. Put the belt guard back on. Click it.';
   };
   const beltD = (sag, r1, r2, c2) => {
     const c1 = BS, d = Math.hypot(c2.x - c1.x, c2.y - c1.y), a = Math.atan2(c2.y - c1.y, c2.x - c1.x), ph = Math.asin((r1 - r2) / d), n1 = a - Math.PI / 2 - ph, n2 = a + Math.PI / 2 + ph;
@@ -5005,6 +5132,7 @@ function beltJob(mode, variant, done) {
     const bx = [cx - 62 * k - 14, cx - 62 * k + 14, cx + 62 * k - 14, cx + 62 * k + 14]; bx.forEach((x, i) => { s += boltSvg(x, by + 11, i, 1.1, st.bolts[i]); });
     s += `<text x="${cx}" y="${cy - 142 * k + 8}" text-anchor="middle" font-size="10" fill="#8b99a6" font-family="monospace" letter-spacing="1">MOTOR</text>`;
     s += `<g font-family="monospace" font-size="11" fill="#9fd0ff" font-weight="700"><path d="M${cx - 150} 78 H${cx - 250} M${cx - 240} 72 L${cx - 252} 78 L${cx - 240} 84" stroke="#9fd0ff" stroke-width="2.5" fill="none"/><text x="${cx - 150}" y="64">TOWARD THE BLOWER</text><path d="M${cx + 150} 78 H${cx + 250} M${cx + 240} 72 L${cx + 252} 78 L${cx + 240} 84" stroke="#9fd0ff" stroke-width="2.5" fill="none"/><text x="${cx + 150}" y="64" text-anchor="start">AWAY: MORE TENSION</text></g>`;
+    if (TAP) { const act = st.stage === 1 || st.stage === 4; [[-1, 'SLIDE IN', 230], [1, 'SLIDE OUT', 520]].forEach(([d, t, x]) => { s += `<g class="sl" data-d="${d}" style="cursor:pointer" opacity="${act ? 1 : .45}"><rect x="${x}" y="${VH - 66}" width="240" height="52" rx="9" fill="${act ? '#2d6cdf' : '#3a4650'}" stroke="#9cc0ff" stroke-width="3"/><text x="${x + 120}" y="${VH - 33}" text-anchor="middle" font-size="19" font-weight="700" font-family="monospace" fill="#fff">${d < 0 ? '◀ ' + t : t + ' ▶'}</text></g>`; }); }
     /* tension readout with a small drawing of the belt span */
     const px = 700, py = 90; s += `<rect x="${px}" y="${py}" width="236" height="180" rx="6" fill="#12181d" stroke="${st.stage === 4 ? (ok ? '#38c172' : '#e5a312') : '#3a4650'}" stroke-width="2"/><text x="${px + 118}" y="${py + 20}" text-anchor="middle" font-size="10" fill="#9aa8b5" font-family="monospace" letter-spacing="1.2">BELT TENSION CHECK</text>`;
     const sg = Math.min(26, dv * 16);
@@ -5025,15 +5153,28 @@ function beltJob(mode, variant, done) {
   let rq = 0; const drawR = () => { if (rq) return; rq = requestAnimationFrame(() => { rq = 0; if ($('beSvg')) draw(); }); };
   const draw = () => { $('beSvg').innerHTML = st.view === 'motor' ? motorScene() : beltScene(); $('beStep').textContent = hint(); const m = $('beMsg'); m.textContent = st.msg; m.style.color = st.bad ? '#ffb3ac' : 'var(--dim)'; };
   const pt = e => { const sv = $('beSvg'), p = sv.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; const q = p.matrixTransform(sv.getScreenCTM().inverse()); return { x: q.x, y: q.y }; };
+  const dropOld = () => { st.beltOn = false; st.stage = 3; say((variant === 'broken' ? 'Broken belt in the trash. The number is on the shelf labels. It was ' : 'Old belt in the trash. Size ') + tl + ' cogged. Sheave grooves are smooth. Get the same size from the shelf.'); };
+  const placeNew = size => {
+    if (size === truth) { st.beltOn = true; st.newBelt = true; st.stage = 4; st.t = 0.12; say('New ' + tl + ' cogged belt is on both sheaves. Go back to the motor and take up the tension.'); }
+    else { const a = size.slice(0, 2), n = +size.slice(2), tn = +truth.slice(2); say(a !== truth.slice(0, 2) ? size + ' is the wrong section. It rides too high or too low in the groove and slips. Match the belt number on the old one.' : n < tn ? size + ' is too short. It will not go over the sheaves without stretching it.' : size + ' is too long. The motor cannot slide far enough to take up the slack.', true); }
+  };
   const wire = () => {
     const sv = $('beSvg'); let off = 0;
     sv.onpointerdown = e => {
       const p = pt(e), bo = e.target.closest('.bo'), mt = e.target.closest('.mt'), ob = e.target.closest('.ob'), nb = e.target.closest('.nb'), gd = e.target.closest('#grd'), bk = e.target.closest('#bk');
       if (st.view === 'motor') {
         if (bk) { st.view = 'belt'; say(''); draw(); return; }
+        const sl = e.target.closest('.sl');
+        if (sl) {
+          if (st.stage !== 1 && st.stage !== 4) { say(st.stage === 0 ? 'The motor is bolted down. Loosen the four bolts first.' : 'Nothing to slide right now.', true); draw(); return; }
+          if (st.bolts.some(b => b)) { say('Loosen all four motor bolts before sliding the motor.', true); draw(); return; }
+          st.t = Math.max(0, Math.min(1, st.t + (+sl.dataset.d) * (st.stage === 1 ? 0.1 : 0.04)));
+          if (st.stage === 1 && st.t < .12) { st.stage = 2; say(variant === 'broken' ? 'The motor is in. Go back to the belt and pull the broken belt out.' : 'The motor is slid in and the belt is slack. Go back to the belt and take it off.'); } else say('');
+          draw(); return;
+        }
         if (bo) {
           const i = +bo.dataset.i;
-          if (st.stage === 0) { st.bolts[i] = false; say(''); if (st.bolts.every(b => !b)) { st.stage = mode === 'adj' ? 4 : 1; say(mode === 'adj' ? 'All four bolts are loose. Now drag the motor to take up the belt.' : 'All four bolts are loose. The motor can slide on its slots. Drag it toward the blower.'); } }
+          if (st.stage === 0) { st.bolts[i] = false; say(''); if (st.bolts.every(b => !b)) { st.stage = mode === 'adj' ? 4 : 1; say(mode === 'adj' ? (TAP ? 'All four bolts are loose. Now tap SLIDE OUT to take up the belt.' : 'All four bolts are loose. Now drag the motor to take up the belt.') : (TAP ? 'All four bolts are loose. The motor can slide on its slots. Tap SLIDE IN.' : 'All four bolts are loose. The motor can slide on its slots. Drag it toward the blower.')); } }
           else if (st.stage === 4) {
             st.bolts[i] = true;
             if (st.bolts.every(b => b)) { const dv = defl(st.t);
@@ -5048,6 +5189,8 @@ function beltJob(mode, variant, done) {
       }
       if (mt && !ob) { st.view = 'motor'; say(st.stage === 0 ? 'Here is the motor mounting. Loosen the four bolts.' : st.stage === 1 ? 'Slide the motor toward the blower.' : st.stage === 4 ? 'Set the tension, then tighten the bolts.' : 'The motor is set for now. Go back to the belt.'); draw(); return; }
       if (gd && st.stage === 5) { st.guard = true; st.stage = 6; draw(); setTimeout(() => { $('modal').hidden = true; done(); }, 900); return; }
+      if (TAP && ob && st.stage === 2) { dropOld(); draw(); return; }
+      if (TAP && nb && st.stage === 3) { placeNew(nb.dataset.size); draw(); return; }
       if (ob && st.stage === 2) { st.drag = { kind: 'ob', x: p.x, y: p.y }; say(variant === 'broken' ? '' : 'The old belt: ' + tl + ' cogged. ' + (variant === 'worn' ? 'It is cracked across the cogs, glazed and stretched.' : 'It is in good shape. It was just run loose.')); sv.setPointerCapture(e.pointerId); draw(); return; }
       if (ob && st.stage < 2) { say(st.stage === 0 ? 'The motor is still bolted tight. Click the motor and loosen it first.' : 'Slide the motor toward the blower first so the belt goes slack.', true); draw(); return; }
       if (nb) { if (st.stage !== 3) { say(st.stage < 3 ? 'Get the old belt off first.' : 'The belt is already on.', true); draw(); return; } st.drag = { kind: 'nb', x: p.x, y: p.y, size: nb.dataset.size }; sv.setPointerCapture(e.pointerId); draw(); return; }
@@ -5365,6 +5508,7 @@ function strike(msg) {
   strikes++; log('SAFETY STRIKE: ' + msg, 's'); renderHud();
   if (strikes >= 3) endLevel(false, 'Three safety strikes. A real tech gets sent home after that. Go over your lockout routine and try again.');
 }
+const isBoard = () => document.documentElement.classList.contains('board');
 function sheet(html) { $('sheet').className = 'sheet'; $('sheet').onclick = null; $('sheet').oninput = null; $('sheet').onchange = null; $('sheet').innerHTML = html; $('modal').hidden = false; const b = $('sheet').querySelector('button'); if (b) b.focus(); }
 
 function startLevel(i) {
@@ -5390,7 +5534,7 @@ function endLevel(win, msg) {
     $('rBtn').onclick = () => startLevel(li); return;
   }
   const par = l.par;
-  let stars = 3 - (strikes ? 1 : 0) - (wrongParts ? 1 : 0) - (hintsUsed ? 1 : 0) - (readings > par * 2 ? 1 : 0);
+  let stars = 3 - (strikes ? 1 : 0) - (wrongParts ? 1 : 0) - (readings > par * 2 ? 1 : 0);
   stars = Math.max(1, stars);
   doneSet.add(l.id); saveDone(); renderTabs();
   const last = li === CUR.levels.length - 1;
@@ -5398,7 +5542,7 @@ function endLevel(win, msg) {
     <div class="stars">${'★'.repeat(stars)}<span class="off">${'★'.repeat(3 - stars)}</span></div>
     <p>${last ? CUR.finale : 'The unit is cooling and the customer is happy.'}</p>
     <table><tr><td>Readings taken (par ${par})</td><td>${readings}</td></tr><tr><td>Safety strikes</td><td>${strikes}</td></tr>
-    <tr><td>Wrong parts</td><td>${wrongParts}</td></tr><tr><td>Hints used</td><td>${hintsUsed}</td></tr><tr><td>Parts changed</td><td>${partsUsed}</td></tr></table>
+    <tr><td>Wrong parts</td><td>${wrongParts}</td></tr><tr><td>Parts changed</td><td>${partsUsed}</td></tr></table>
     <div class="row"><button class="btn" id="exploreBtn" type="button">Keep exploring</button><button class="btn" id="againBtn" type="button">Replay</button>${last ? '' : '<button class="btn go" id="nextBtn" type="button">Next job</button>'}</div>`);
   $('againBtn').onclick = () => startLevel(li);
   $('exploreBtn').onclick = () => { explore = true; active = true; $('modal').hidden = true; log('Job closed out. Free look: keep using the meters, tabs and parts. Nothing is scored now.', 's'); };
@@ -5460,6 +5604,8 @@ function installPart(k, washed) {
     log('Belt tension checked: about 1/2 inch of deflection at midspan. It is already right and needs no change.', 'h');
   } else if (k === 'beltadj' && Sim.faults.has('belt_loose')) {
     wrongParts++; log('You took up the slack, but this belt is old, cracked and glazed. It still slips and will be loose again in days. Replace the belt.', 's');
+  } else if (/^jmp/.test(k)) {
+    wrongParts++; log('You looked at that switch. There is no jumper on it.', 's');
   } else {
     wrongParts++; log('Installed: ' + p.name + '. It made no difference. That part was fine.', 's');
   }
@@ -5487,9 +5633,9 @@ const PART_GROUPS = [
   ['Compressor and motors', ['comp', 'comp1', 'comp2', 'cch', 'cch1', 'cch2', 'fan', 'fan1', 'fan2', 'blower', 'belt', 'beltadj']],
   ['Capacitors', ['cap', 'cap1', 'cap2', 'bcap']],
   ['Control circuit (24 V)', ['xfmr', 'fuse', 'stat', 'llboard', 'relay', 'wire']],
-  ['Safety switches', ['hps', 'hps1', 'hps2', 'lps', 'lps1', 'lps2', 'floatsw', 'freezestat', 'frz1', 'frz2', 'pfs', 'pm']],
+  ['Safety switches', ['hps', 'hps1', 'hps2', 'lps', 'lps1', 'lps2', 'floatsw', 'freezestat', 'frz1', 'frz2', 'pfs', 'pm', 'jmphps', 'jmplps', 'jmpflt', 'jmpfrz', 'jmppfs']],
   ['Airflow and drain', ['filter', 'cleanevap', 'cleancond', 'drain']],
-  ['Refrigerant circuit', ['core', 'corehi', 'core2', 'corehi2', 'drier', 'txv', 'evapcoil']]
+  ['Refrigerant circuit', ['core', 'corehi', 'core2', 'corehi2', 'drier', 'txv', 'evapcoil', 'condcoil', 'braze', 'flare', 'valvepack']]
 ];
 function buildPartOptions() {
   let used = new Set(), h = '';
@@ -5525,30 +5671,39 @@ function applySet(key) {
   $('phaseSel').innerHTML = key === 'M' ? '<option value="supply">Phase tester: supply side</option><option value="load1">Phase tester: compressor 1 side</option><option value="load2">Phase tester: compressor 2 side</option>' : '<option value="supply">Phase tester: supply side</option><option value="load">Phase tester: compressor side</option>';
   $('legendS').innerHTML = (key === '3' || key === 'M' || key === 'C') ? '<span style="color:#e8a33b">Orange: 208 V power circuit</span><span style="color:var(--blue)">Blue: 24 V control circuit</span>' : '<span style="color:#e8a33b">Orange: 240 V power circuit</span><span style="color:var(--blue)">Blue: 24 V control circuit</span>';
   $('phaseRow').hidden = !CUR.phaseTool; $('phaseOut').textContent = '---';
-  document.querySelectorAll('.setbtn').forEach(b => b.classList.toggle('on', b.dataset.k === key));
-  $('instrBtn').hidden = key !== 'C'; $('hintBtn').hidden = key === 'C';
+  if ($('setSel')) $('setSel').value = key;
+  $('instrBtn').hidden = key !== 'C';
   try { localStorage.setItem('put_set', key); } catch (e) {}
 }
 function init() {
-  $('setTabs').innerHTML = Object.keys(SETS).map(k => `<button class="setbtn" data-k="${k}" type="button">${SETS[k].label}</button>`).join('');
+  $('setTabs').innerHTML = `<select id="setSel" aria-label="Level set">` + Object.keys(SETS).map(k => `<option value="${k}">${SETS[k].label}</option>`).join('') + `</select>`;
   $('instrBtn').onclick = () => instrOpenSetup();
   let rpT = null;
-  /* desktop / phone layout */
-  const setView = (phone, save) => {
-    document.documentElement.classList.toggle('phone', phone);
-    $('viewBtn').textContent = phone ? 'View: Phone' : 'View: Desktop';
-    if (save) { try { localStorage.setItem('putView', phone ? 'phone' : 'desktop'); } catch (e) { } }
+  /* desktop / phone / smartboard layout */
+  const VIEWS = ['desktop', 'phone', 'board'], VLABEL = { desktop: 'View: Desktop', phone: 'View: Phone', board: 'View: Smartboard' };
+  let viewMode = 'desktop', boardAdj = 1;
+  try { const q = parseFloat(localStorage.getItem('putBoardAdj')); if (q > 0.5 && q < 2.5) boardAdj = q; } catch (e) { }
+  const applyBoardZoom = () => { const z = Math.max(1, Math.min(3.5, window.innerWidth / 1536 * boardAdj)); document.documentElement.style.setProperty('--bz', viewMode === 'board' ? z.toFixed(3) : '1'); };
+  const setView = (mode, save) => {
+    viewMode = mode; const r = document.documentElement.classList;
+    r.toggle('phone', mode === 'phone'); r.toggle('board', mode === 'board'); applyBoardZoom();
+    $('viewBtn').textContent = VLABEL[mode];
+    if (window.setUnitZoom) window.setUnitZoom(mode === 'phone' ? 3 : 1);
+    if (save) { try { localStorage.setItem('putView', mode); } catch (e) { } }
   };
   { let v = null; try { v = localStorage.getItem('putView'); } catch (e) { }
-    setView(v ? v === 'phone' : window.innerWidth <= 900, false); }
-  $('viewBtn').onclick = () => setView(!document.documentElement.classList.contains('phone'), true);
+    setView(VIEWS.indexOf(v) >= 0 ? v : window.innerWidth >= 2560 ? 'board' : window.innerWidth <= 900 ? 'phone' : 'desktop', false); }
+  $('viewBtn').onclick = () => setView(VIEWS[(VIEWS.indexOf(viewMode) + 1) % 3], true);
+  const bump = d => { boardAdj = Math.max(0.6, Math.min(2, Math.round((boardAdj + d) * 100) / 100)); try { localStorage.setItem('putBoardAdj', String(boardAdj)); } catch (e) { } applyBoardZoom(); };
+  $('bzDn').onclick = () => bump(-0.1); $('bzUp').onclick = () => bump(0.1);
+  window.addEventListener('resize', applyBoardZoom);
   $('resetProg').onclick = () => {
     const b = $('resetProg');
     if (!rpT) { b.textContent = 'Tap again to confirm'; b.classList.add('go'); rpT = setTimeout(() => { rpT = null; b.textContent = 'Reset progress'; b.classList.remove('go'); }, 4000); return; }
     clearTimeout(rpT); rpT = null; b.textContent = 'Reset progress'; b.classList.remove('go');
     doneSet.clear(); saveDone(); explore = false; renderTabs(); startLevel(0);
   };
-  $('setTabs').addEventListener('click', e => { const b = e.target.closest('.setbtn'); if (!b || b.dataset.k === CUR.key) return; applySet(b.dataset.k); if (b.dataset.k === 'C') { instrEnter(); return; } const f = CUR.levels.findIndex(l => !doneSet.has(l.id)); startLevel(f < 0 ? 0 : f); });
+  $('setTabs').addEventListener('change', e => { const b = { dataset: { k: e.target.value } }; if (b.dataset.k === CUR.key) return; applySet(b.dataset.k); if (b.dataset.k === 'C') { instrEnter(); return; } const f = CUR.levels.findIndex(l => !doneSet.has(l.id)); startLevel(f < 0 ? 0 : f); });
   let saved = '1'; try { saved = ['3', 'R', 'M'].includes(localStorage.getItem('put_set')) ? localStorage.getItem('put_set') : '1'; } catch (e) {}
   applySet(saved); initPic();
   $('phaseBtn').onclick = () => {
@@ -5568,6 +5723,7 @@ function init() {
   const ZS = [0.75, 1, 1.25, 1.5, 2]; let zi = 1;
   const applyZoom = () => { $('unitSvg').style.width = (ZS[zi] * 100) + '%'; $('zLbl').textContent = Math.round(ZS[zi] * 100) + '%'; };
   $('wireTog').onclick = () => { const off = $('unitSvg').classList.toggle('nowires'); $('wireTog').textContent = 'Wires: ' + (off ? 'Off' : 'On'); $('wireTog').setAttribute('aria-pressed', String(!off)); };
+  window.setUnitZoom = i => { zi = i; applyZoom(); }; window.setUnitZoom(viewMode === 'phone' ? 3 : 1);
   $('zIn').onclick = () => { if (zi < ZS.length - 1) { zi++; applyZoom(); } };
   const SZ = [0.4, 0.55, 0.7, 0.85, 1, 1.5, 2, 3]; let si = 4;
   const applySZ = () => { $('schemSvg').style.width = (SZ[si] * 100) + '%'; $('schemSvg').style.maxHeight = 'none'; $('schemSvg').style.margin = '0 auto'; $('schemSvg').style.display = 'block'; $('szLbl').textContent = Math.round(SZ[si] * 100) + '%'; };
@@ -5577,14 +5733,15 @@ function init() {
   applySZ();
   $('zOut').onclick = () => { if (zi > 0) { zi--; applyZoom(); } };
   const tabs = { Unit: 'viewUnit', Schem: 'viewSchem', Pic: 'viewPic', Therm: 'viewTherm', Order: 'viewOrder', Plate: 'viewPlate', Spec: 'viewSpec' };
-  const showTab = k => { Object.keys(tabs).forEach(n => { $('tab' + n).classList.toggle('on', n === k); $(tabs[n]).hidden = n !== k; }); $('zoomBox').hidden = k !== 'Unit'; document.documentElement.dataset.tab = k; };
+  const showTab = k => { $('tabSel').value = k; Object.keys(tabs).forEach(n => { $('tab' + n).classList.toggle('on', n === k); $(tabs[n]).hidden = n !== k; }); $('zoomBox').hidden = k !== 'Unit'; document.documentElement.dataset.tab = k; };
   Object.keys(tabs).forEach(k => { $('tab' + k).onclick = () => showTab(k); });
+  $('tabSel').onchange = e => showTab(e.target.value);
   $('mV').onclick = () => setMode('V'); $('mR').onclick = () => setMode('R'); $('mC').onclick = () => setMode('C');
   $('clearP').onclick = () => { probes = { red: null, black: null }; probeSel = null; measure(false); };
   $('chipR').onclick = () => chipClick('red'); $('chipK').onclick = () => chipClick('black');
   $('discBtn').onclick = () => {
     if (!active) return;
-    Sim.setDisc(!Sim.disc); setSwitches();
+    Sim.setDisc(!Sim.disc); if (!Sim.disc) { Ref.resetLock(); Ref.iceT = 0; Ref.frz = false; } Ref.newLock = false; setSwitches();
     log(Sim.disc ? 'Disconnect closed. Power is on.' : 'Disconnect opened. Power is off.');
     measure(false); updateStatus();
   };
@@ -5610,23 +5767,18 @@ function init() {
     $('clampOut').textContent = jit(a).toFixed(1) + ' A'; renderHud();
   };
   $('installBtn').onclick = () => installPart($('partSel').value);
-  $('hintBtn').onclick = () => {
-    if (!active) return;
-    const hs = CUR.levels[li].hints;
-    if (hintIdx >= hs.length) return log('No more hints for this job.', 'h');
-    hintsUsed = 1; hintIdx++;
-    log('Hint ' + hintIdx + ' of ' + hs.length + ': ' + hs[hintIdx - 1], 'h');
-  };
+
   $('restartBtn').onclick = () => startLevel(li);
   setInterval(() => {
     if (!active) return;
     tsRoomTick(0.5);
     Sim.ext = Ref.ext(); const done = Sim.tick(0.5); Ref.tick(0.5, Sim.status());
     Sim.events.splice(0).forEach(m => log(m, 's'));
+    if (Ref.newLock) { Ref.newLock = false; log('The unit tripped out.', 's'); }
     updateStatus();
     if (mode === 'V') measure(false);
     renderPicLive();
-    if (done && Ref.ok() && !explore) endLevel(true);
+    if (done && Ref.ok() && ![...Sim.faults].some(k => /^jmp_/.test(k)) && !explore) endLevel(true);
   }, 500);
   const first = CUR.levels.findIndex(l => !doneSet.has(l.id));
   startLevel(first < 0 ? 0 : first);
