@@ -471,6 +471,10 @@ html.phone .recRow{grid-template-columns:1fr auto}html.phone .recMeta{grid-colum
   .noPrint{display:none!important}
 }
 
+/* smartboard: the hands-on jobs (filters, coil wash, drain, belt) fill the screen; the picture is as wide as the screen height allows */
+html.board .sheet.wide.big{width:calc(98 * var(--VW));max-height:calc(98 * var(--VH));padding:12px 22px 14px}
+html.board .sheet.big .mgFit{max-width:calc((98 * var(--VH) - 210px) * var(--ar));margin-left:auto;margin-right:auto}
+
 </style>
 <script>
 /* plain old JavaScript on purpose: if the game script cannot run on this browser, say so on screen instead of showing a blank page */
@@ -11662,7 +11666,7 @@ function washCoil(k, done) {
   const cond = k === "cleancond", W = 720, H = 420, TAP = isBoard(), R = TAP ? 78 : 52;
   sheet(`<div class="kick">${cond ? "Condenser coil, outdoor" : "Evaporator coil, indoor"} \xB7 Pressure washer</div><h3>Wash the coil</h3>
     <p style="color:var(--dim);margin:2px 0 8px">Disconnect is open. ${TAP ? "Tap a spot on the coil to blast it with the washer. Keep tapping spot after spot, overlapping, until the whole coil is clean." : "Hold the mouse button (or your finger) down to spray, and sweep the wand across the coil in slow, overlapping passes."} ${cond ? "Work the whole face, including the corners and the bottom rows." : "Get into the corners and along the bottom."} Anything you skip stays dirty.</p>
-    <canvas id="washCv" width="${W}" height="${H}" style="width:100%;touch-action:none;border-radius:6px;border:1px solid var(--line);cursor:none;display:block;background:#10151b"></canvas>
+    <canvas id="washCv" class="mgFit" width="${W}" height="${H}" style="--ar:${W / H};width:100%;touch-action:none;border-radius:6px;border:1px solid var(--line);cursor:none;display:block;background:#10151b"></canvas>
     <div style="height:10px;background:var(--panel2);border-radius:5px;margin:10px 0 4px;overflow:hidden"><div id="washBar" style="height:100%;width:0;background:var(--blue);transition:width .2s"></div></div>
     <div class="row" style="justify-content:space-between"><span id="washPct" class="dim" style="font-family:var(--mono)">0% clean</span><button class="btn" id="washCancel" type="button">Stop washing</button></div>`);
   $("sheet").classList.add("wide", "big");
@@ -11868,6 +11872,10 @@ function washCoil(k, done) {
     }
   };
   const frame = (now) => {
+    if (!document.getElementById("washCv")) {
+      washState = false;
+      return;
+    }
     const dt = Math.min(0.05, (now - last) / 1e3);
     last = now;
     frameN++;
@@ -12037,7 +12045,7 @@ function filterSwap(done) {
   const mount = () => {
     sheet(`<div class="kick">Return air filter rack \xB7 ${N} filters</div><h3>Change the filters</h3>
       <div id="fltStep" style="color:var(--yellow);font:600 13px var(--body);margin:4px 0 8px"></div>
-      <svg id="fltSvg" viewBox="0 0 ${VW} ${VH}" style="width:100%;border-radius:6px;border:1px solid var(--line);display:block;touch-action:none;user-select:none"></svg>
+      <svg id="fltSvg" class="mgFit" viewBox="0 0 ${VW} ${VH}" style="--ar:${VW / VH};width:100%;border-radius:6px;border:1px solid var(--line);display:block;touch-action:none;user-select:none"></svg>
       <div id="fltMsg" style="min-height:38px;font-size:13px;margin-top:8px"></div>
       <div class="row" style="justify-content:flex-end"><button class="btn" id="fltCancel" type="button">Stop</button></div>`);
     $("sheet").classList.add("wide", "big");
@@ -12387,7 +12395,7 @@ function drainJob(done) {
   };
   const mount = () => {
     sheet(`<div class="kick">Condensate drain pan and line</div><h3>Clear the drain</h3><div id="drStep" style="color:var(--yellow);font:600 13px var(--body);margin:4px 0 8px"></div>
-      <svg id="drSvg" viewBox="0 0 ${VW} ${VH}" style="width:100%;border-radius:6px;border:1px solid var(--line);display:block;touch-action:none;user-select:none"></svg>
+      <svg id="drSvg" class="mgFit" viewBox="0 0 ${VW} ${VH}" style="--ar:${VW / VH};width:100%;border-radius:6px;border:1px solid var(--line);display:block;touch-action:none;user-select:none"></svg>
       <div class="row" style="justify-content:space-between;margin-top:8px"><div id="drMsg" style="font-size:13px;min-height:36px;flex:1"></div></div>
       <div class="row" style="justify-content:space-between;align-items:center"><div class="row"><button class="btn go" id="drVac" type="button" disabled>${TAP ? "Tap to run the vacuum" : "Hold to run the vacuum"}</button><button class="btn" id="drPour" type="button" disabled>Pour a cup of water in the pan</button></div><button class="btn" id="drStop" type="button">Stop</button></div>`);
     $("sheet").classList.add("wide", "big");
@@ -12781,7 +12789,7 @@ function beltJob(mode2, variant, done) {
   };
   const mount = () => {
     sheet(`<div class="kick">Indoor blower \xB7 belt drive</div><h3>${mode2 === "adj" ? "Adjust the belt tension" : "Replace the blower belt"}</h3><div id="beStep" style="color:var(--yellow);font:600 13px var(--body);margin:4px 0 8px"></div>
-      <svg id="beSvg" viewBox="0 0 ${VW} ${VH}" style="width:100%;border-radius:6px;border:1px solid var(--line);display:block;touch-action:none;user-select:none"></svg>
+      <svg id="beSvg" class="mgFit" viewBox="0 0 ${VW} ${VH}" style="--ar:${VW / VH};width:100%;border-radius:6px;border:1px solid var(--line);display:block;touch-action:none;user-select:none"></svg>
       <div id="beMsg" style="min-height:38px;font-size:13px;margin-top:8px"></div><div class="row" style="justify-content:flex-end"><button class="btn" id="beStop" type="button">Stop</button></div>`);
     $("sheet").classList.add("wide", "big");
     $("beStop").onclick = () => {
