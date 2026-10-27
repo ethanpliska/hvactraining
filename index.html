@@ -493,6 +493,24 @@ html.phone .tmRow{grid-template-columns:1fr auto}html.phone .tmBtns{grid-column:
 .rpList{display:grid;gap:6px;margin:4px 0 12px}.rpList .btn{display:flex;flex-direction:column;align-items:flex-start;text-align:left;padding:10px 14px;gap:2px}
 .rpList .btn span{font:400 12.5px inherit;letter-spacing:0;text-transform:none;color:var(--dim)}
 
+/* field wiring diagram in the manufacturer's style: thin black lines on white, condensed capitals */
+.sch .wd text{fill:#111;font-family:"Arial Narrow","Roboto Condensed","Helvetica Neue Condensed","Liberation Sans Narrow",Arial,sans-serif;text-transform:uppercase}
+.sch .wdPaper{fill:#fff;stroke:#bbb;stroke-width:1.5}
+.sch .wdW{fill:none;stroke:#111;stroke-width:1.25;stroke-linejoin:miter}
+.sch .wdW.fld{stroke-dasharray:14 9}
+.sch .wdSym{fill:none;stroke:#111;stroke-width:1.25;stroke-linejoin:round;stroke-linecap:round}
+.sch .wdTc{fill:#fff;stroke:#111;stroke-width:1.25}
+.sch .wdBox{fill:none;stroke:#111;stroke-width:1.25}.sch .wdBox.fld{stroke-dasharray:14 9}
+.sch .wdDot{fill:#111}
+.sch .wdGap{fill:#fff}
+.sch .wd .wdTn{font-size:9.5px;font-weight:700}
+.sch .wd .wdT{font-size:12px;font-weight:700;letter-spacing:.03em}
+.sch .wd .wdS{font-size:10px;font-weight:600;letter-spacing:.02em}
+.sch .wd .wdTag{font-size:9.5px;font-weight:700;letter-spacing:.03em}
+.sch .wd .wdH{font-size:14px;font-weight:700;letter-spacing:.08em}
+.sch .wd .wdCap{font-family:Arial,"Helvetica Neue",sans-serif;font-size:19px;font-weight:700;text-transform:none}
+#schMode[hidden]{display:none!important}
+
 </style>
 <script>
 /* plain old JavaScript on purpose: if the game script cannot run on this browser, say so on screen instead of showing a blank page */
@@ -545,7 +563,7 @@ window.onerror = function (msg, src, line) {
       <div class="legend" id="legend"><span><i style="background:var(--red)"></i>Red probe</span><span><i style="background:#fff"></i>Black probe</span><span><i style="background:#e8a33b"></i>240 V leg 1 (L1/T1)</span><span><i style="background:#b48cff"></i>240 V leg 2 (L2/T2)</span><span><i style="background:#38c172"></i>Capacitor start wires</span><span><i style="background:#e5483b"></i>24 V hot</span><span><i style="background:#4aa3df"></i>Common</span><span>Click a terminal to probe.</span></div>
     </div>
     <div class="view" id="viewSchem" hidden>
-      <div class="zoom" id="schZoom" style="margin-bottom:6px">Zoom <button class="zb" id="szOut" type="button" aria-label="Zoom out schematic">−</button><span id="szLbl">100%</span><button class="zb" id="szIn" type="button" aria-label="Zoom in schematic">+</button><button class="btn" id="szFit" type="button">Fit</button><button class="btn go" id="seqBtn" type="button" title="Step through how a healthy unit runs, with live readings">Sequence of operation</button></div>
+      <div class="zoom" id="schZoom" style="margin-bottom:6px">Zoom <button class="zb" id="szOut" type="button" aria-label="Zoom out schematic">−</button><span id="szLbl">100%</span><button class="zb" id="szIn" type="button" aria-label="Zoom in schematic">+</button><button class="btn" id="szFit" type="button">Fit</button><span class="rcSeg" id="schMode" style="display:inline-flex;gap:4px"><button class="btn" data-sm="ladder" type="button">Ladder</button><button class="btn" data-sm="wd" type="button">Wiring diagram</button></span><button class="btn go" id="seqBtn" type="button" title="Step through how a healthy unit runs, with live readings">Sequence of operation</button></div>
       <div class="scroll" id="schemScroll" style="flex:1;min-height:0;overflow:auto"><svg id="schemSvg" class="sch" viewBox="0 0 800 960" preserveAspectRatio="xMidYMin meet" role="img" aria-label="Ladder wiring schematic" style="flex:none"></svg></div>
       <div class="legend" id="legendS"><span style="color:#e8a33b">Orange: 240 V power circuit</span><span style="color:var(--blue)">Blue: 24 V control circuit</span></div>
     </div>
@@ -2173,10 +2191,12 @@ const PARTSE = Object.assign({}, PARTS_HC, {
   hc1: { name: "Heat contactor HC1 (24V coil, 3-pole)", cost: 0 },
   hc2: { name: "Heat contactor HC2 (24V coil, 3-pole)", cost: 0 }
 });
-for (let n = 1; n <= 6; n++) {
-  PARTSE["elem" + n] = { name: "Heater element E" + n + " (stage " + (n < 4 ? 1 : 2) + ")", cost: 0 };
-  PARTSE["lim" + n] = { name: "Element limit switch LS" + n + " (stage " + (n < 4 ? 1 : 2) + ")", cost: 0 };
-  PARTSE["jmpls" + n] = { name: "Remove jumper: limit LS" + n, cost: 0 };
+for (let n = 1; n <= 6; n++) PARTSE["elem" + n] = { name: "Heater element E" + n + " (stage " + (n < 4 ? 1 : 2) + ")", cost: 0 };
+for (let n = 1; n <= 2; n++) {
+  PARTSE["lim" + n] = { name: "Primary limit LS" + n + " (stage " + n + ", auto reset)", cost: 0 };
+  PARTSE["slim" + n] = { name: "Secondary limit SL" + n + " (stage " + n + ", manual reset)", cost: 0 };
+  PARTSE["slreset" + n] = { name: "Press the reset button on secondary limit SL" + n, cost: 0 };
+  PARTSE["jmpls" + n] = { name: "Remove jumper: primary limit LS" + n, cost: 0 };
 }
 const FIX_HC = { pfuse_L1: "pfuse", pfuse_L2: "pfuse", pfuse_L3: "pfuse", fuse_open: "fuse", w_wire: "wwire", relay_coil_open: "relay", belt_broken: "belt", belt_loose: "belt", belt_slack: "beltadj" };
 const FIXESG = Object.assign({}, FIX_HC, {
@@ -2198,10 +2218,12 @@ const FIXESG = Object.assign({}, FIX_HC, {
   jmp_ps: "jmpps"
 });
 const FIXESE = Object.assign({}, FIX_HC, { hc1_coil: "hc1", hc2_coil: "hc2", hc1_pole: "hc1" });
-for (let n = 1; n <= 6; n++) {
-  FIXESE["elem_open_" + n] = "elem" + n;
+for (let n = 1; n <= 6; n++) FIXESE["elem_open_" + n] = "elem" + n;
+for (let n = 1; n <= 2; n++) {
   FIXESE["lim_bad_" + n] = "lim" + n;
   FIXESE["jmp_ls_" + n] = "jmpls" + n;
+  FIXESE["sec_bad_" + n] = "slim" + n;
+  FIXESE["sec_trip_" + n] = "slreset" + n;
 }
 const NODES_HC = {
   F1_IN: "Disconnect fuse F1, supply side",
@@ -2275,9 +2297,14 @@ const NODESE = Object.assign({}, NODES_HC, {
 const ELEM = [null, [1, 1, 2], [1, 2, 3], [1, 3, 1], [2, 1, 2], [2, 2, 3], [2, 3, 1]];
 for (let n = 1; n <= 6; n++) {
   const [st, a, b] = ELEM[n];
-  NODESE["LS" + n + "_A"] = "Limit LS" + n + ", in (from HC" + st + " T" + a + ")";
-  NODESE["LS" + n + "_B"] = "Limit LS" + n + ", out (to element E" + n + ")";
-  NODESE["E" + n + "_B"] = "Element E" + n + ", far end (to HC" + st + " T" + b + ")";
+  NODESE["E" + n + "_A"] = "Element E" + n + ", one end (from HC" + st + " T" + a + ")";
+  NODESE["E" + n + "_B"] = "Element E" + n + ", other end (to HC" + st + " T" + b + ")";
+}
+for (let n = 1; n <= 2; n++) {
+  NODESE["LS" + n + "_A"] = "Primary limit LS" + n + " (24 V, auto reset), in (from thermostat W" + n + ")";
+  NODESE["LS" + n + "_B"] = "Primary limit LS" + n + " (24 V, auto reset), out (to SL" + n + ")";
+  NODESE["SL" + n + "_A"] = "Secondary limit SL" + n + " (24 V, manual reset), in (from LS" + n + ")";
+  NODESE["SL" + n + "_B"] = "Secondary limit SL" + n + " (24 V, manual reset), out (to HC" + n + " coil A)";
 }
 const NETSG = [
   ["F1_OUT", "XFMR_P1", "K2_L1", "IGC_L1"],
@@ -2308,24 +2335,22 @@ const NETSE = [
   ["K2_T1", "BLW_1"],
   ["K2_T2", "BLW_2"],
   ["K2_T3", "BLW_3"],
-  ["HC1_T1", "LS1_A", "E3_B"],
-  ["HC1_T2", "LS2_A", "E1_B"],
-  ["HC1_T3", "LS3_A", "E2_B"],
-  ["HC2_T1", "LS4_A", "E6_B"],
-  ["HC2_T2", "LS5_A", "E4_B"],
-  ["HC2_T3", "LS6_A", "E5_B"],
-  ["LS1_B"],
-  ["LS2_B"],
-  ["LS3_B"],
-  ["LS4_B"],
-  ["LS5_B"],
-  ["LS6_B"],
+  ["HC1_T1", "E1_A", "E3_B"],
+  ["HC1_T2", "E2_A", "E1_B"],
+  ["HC1_T3", "E3_A", "E2_B"],
+  ["HC2_T1", "E4_A", "E6_B"],
+  ["HC2_T2", "E5_A", "E4_B"],
+  ["HC2_T3", "E6_A", "E5_B"],
   ["SEC_H", "FUSE_IN"],
   ["FUSE_OUT", "T_R"],
   ["T_G", "FRLY_A"],
   ["T_W1"],
-  ["H1_A"],
-  ["T_W2", "H2_A"],
+  ["LS1_A"],
+  ["LS1_B", "SL1_A"],
+  ["SL1_B", "H1_A"],
+  ["T_W2", "LS2_A"],
+  ["LS2_B", "SL2_A"],
+  ["SL2_B", "H2_A"],
   ["SEC_C", "T_C", "FRLY_B", "H1_B", "H2_B", "GND"]
 ];
 const IGC_CODES = { on: "Steady ON (normal)", off: "OFF (no 24 V or bad board)", 2: "2 flashes: limit switch open", 3: "3 flashes: flame sensed with no call", 5: "5 flashes: ignition lockout", 6: "6 flashes: inducer or pressure switch fault", 7: "7 flashes: rollout switch open" };
@@ -2373,6 +2398,7 @@ function makeHeatSim(kind) {
     /* electric state */
     stageHot: [0, 0],
     stageTrip: [false, false],
+    secTrip: [false, false],
     t: { ok: 0 },
     energized: false,
     relayOn: false,
@@ -2399,6 +2425,7 @@ function makeHeatSim(kind) {
       this.stageHot = [0, 0];
       this.stageTrip = [false, false];
       this.t = { ok: 0 };
+      this.secTrip = [false, false];
     },
     boardReset() {
       this.mode = "idle";
@@ -2482,8 +2509,12 @@ function makeHeatSim(kind) {
         this._L = L;
       } else {
         p.T_W1 = this.call && hot(p.T_R) ? p.T_R : zero;
-        p.T_W2 = p.H2_A = this.call2 && hot(p.T_R) ? p.T_R : zero;
-        p.H1_A = f.has("w_wire") ? zero : p.T_W1;
+        p.T_W2 = p.LS2_A = this.call2 && hot(p.T_R) ? p.T_R : zero;
+        p.LS1_A = f.has("w_wire") ? zero : p.T_W1;
+        [1, 2].forEach((n) => {
+          p["LS" + n + "_B"] = p["SL" + n + "_A"] = hot(p["LS" + n + "_A"]) && this.priOk(n) ? p["LS" + n + "_A"] : zero;
+          p["SL" + n + "_B"] = p["H" + n + "_A"] = hot(p["SL" + n + "_A"]) && this.secOk(n) ? p["SL" + n + "_A"] : zero;
+        });
         p.T_G = p.FRLY_A = (this.call || this.fanOn) && hot(p.T_R) ? p.T_R : zero;
         p.FRLY_B = p.H1_B = p.H2_B = zero;
         this.relayOn = hot(p.FRLY_A) && !f.has("relay_coil_open");
@@ -2508,10 +2539,9 @@ function makeHeatSim(kind) {
             p["HC" + st + "_T" + (i + 1)] = T[i];
           });
           for (let k = 1; k <= 3; k++) {
-            const n = base + k, [, a, b] = ELEM[n], Ta = T[a - 1], Tb = T[b - 1];
-            p["LS" + n + "_A"] = Ta;
-            p["E" + n + "_B"] = Tb;
-            p["LS" + n + "_B"] = this.limOk(n) ? Ta : !this.faults.has("elem_open_" + n) ? Tb : idle;
+            const n = base + k, [, a, b] = ELEM[n];
+            p["E" + n + "_A"] = T[a - 1];
+            p["E" + n + "_B"] = T[b - 1];
           }
         });
         this._L = L;
@@ -2549,16 +2579,39 @@ function makeHeatSim(kind) {
       return this.faults.has("gas_low") ? 1.4 : this.ua;
     },
     /* ---- electric helpers ---- */
-    limOk(n) {
-      return this.faults.has("jmp_ls_" + n) || !this.faults.has("lim_bad_" + n) && !this.stageTrip[ELEM[n][0] - 1];
+    /* primary limit (auto reset): opens when its stage overheats, closes again once it cools */
+    priOk(n) {
+      return this.faults.has("jmp_ls_" + n) || !this.faults.has("lim_bad_" + n) && !this.stageTrip[n - 1];
+    },
+    /* secondary limit (manual reset): the backup. Once it opens it stays open until someone presses its reset button */
+    secOk(n) {
+      return !this.faults.has("sec_bad_" + n) && !this.faults.has("sec_trip_" + n) && !this.secTrip[n - 1];
     },
     chainOk(n) {
-      return this.limOk(n) && !this.faults.has("elem_open_" + n);
+      return !this.faults.has("elem_open_" + n);
     },
     elemAmps(n) {
       const p = this._p || this.pots();
       if (!this.chainOk(n)) return 0;
-      return dist(p["LS" + n + "_A"], p["E" + n + "_B"]) / RE;
+      return dist(p["E" + n + "_A"], p["E" + n + "_B"]) / RE;
+    },
+    /* resistance along one stage's 24 V string, power off: R -(stat)- W -(wire)- LS.. -(coil)- C */
+    ctrlOhms(a, b) {
+      const f = this.faults, res = [];
+      [1, 2].forEach((st) => {
+        const chain = st === 1 ? ["T_R", "T_W1", "LS1_A", "LS1_B", "SL1_B", "SEC_C"] : ["T_R", "T_W2", "LS2_B", "SL2_B", "SEC_C"];
+        const r = st === 1 ? [this.call ? 0.2 : Infinity, f.has("w_wire") ? Infinity : 0.3] : [this.call2 ? 0.2 : Infinity];
+        r.push(f.has("jmp_ls_" + st) ? 0 : this.priOk(st) ? 0.1 : Infinity, this.secOk(st) ? 0.1 : Infinity);
+        r.push(f.has("hc" + st + "_coil") ? Infinity : 18);
+        const ia = chain.findIndex((x) => NET_OF[x] === NET_OF[a]), ib = chain.findIndex((x) => NET_OF[x] === NET_OF[b]);
+        if (ia < 0 || ib < 0 || ia === ib) return;
+        let t = 0;
+        for (let i = Math.min(ia, ib); i < Math.max(ia, ib); i++) t += r[i];
+        res.push(t);
+      });
+      if (!res.length) return null;
+      const g = res.reduce((s, x) => s + (x === Infinity ? 0 : 1 / Math.max(x, 1e-6)), 0);
+      return g ? 1 / g : Infinity;
     },
     kw() {
       let k = 0;
@@ -2568,51 +2621,24 @@ function makeHeatSim(kind) {
       }
       return k;
     },
-    /* resistance between two points of one heater stage (power off). Nodes: T1 T2 T3 and the three limit/element junctions */
+    /* resistance between two corners of one heater stage's delta (power off): one element in parallel with the other two in series */
     stageOhms(st, a, b) {
-      const b0 = (st - 1) * 3, nodeOf = (id) => {
-        for (let i = 1; i <= 3; i++) if (NET_OF[id] !== void 0 && NET_OF[id] === NET_OF["HC" + st + "_T" + i]) return i - 1;
-        for (let k = 1; k <= 3; k++) if (id === "LS" + (b0 + k) + "_B") return 2 + k;
+      const T = (id) => {
+        for (let i = 1; i <= 3; i++) if (NET_OF[id] !== void 0 && NET_OF[id] === NET_OF["HC" + st + "_T" + i]) return i;
         return -1;
       };
-      const A2 = nodeOf(a), B = nodeOf(b);
+      const A2 = T(a), B = T(b);
       if (A2 < 0 || B < 0 || A2 === B) return null;
-      const N = 6, G = Array.from({ length: N }, () => new Array(N).fill(0));
-      const add = (i, j, R) => {
-        if (R === Infinity) return;
-        const g = 1 / R;
-        G[i][i] += g;
-        G[j][j] += g;
-        G[i][j] -= g;
-        G[j][i] -= g;
-      };
+      let direct = Infinity, path = 0;
       for (let k = 1; k <= 3; k++) {
-        const n2 = b0 + k, [, ta, tb] = ELEM[n2];
-        add(ta - 1, 2 + k, this.limOk(n2) ? 0.1 : Infinity);
-        add(2 + k, tb - 1, this.faults.has("elem_open_" + n2) ? Infinity : RE);
+        const n = (st - 1) * 3 + k, [, ta, tb] = ELEM[n], r = this.faults.has("elem_open_" + n) ? Infinity : RE;
+        if (ta === A2 && tb === B || ta === B && tb === A2) direct = r;
+        else path += r;
       }
-      for (let i = 0; i < N; i++) G[i][i] += 1e-9;
-      const idx = [...Array(N).keys()].filter((i) => i !== B), M = idx.map((i) => idx.map((j) => G[i][j])), rhs = idx.map((i) => i === A2 ? 1 : 0);
-      const n = idx.length;
-      for (let c = 0; c < n; c++) {
-        let pv = c;
-        for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[pv][c])) pv = r;
-        [M[c], M[pv]] = [M[pv], M[c]];
-        [rhs[c], rhs[pv]] = [rhs[pv], rhs[c]];
-        for (let r = c + 1; r < n; r++) {
-          const q = M[r][c] / M[c][c];
-          for (let k = c; k < n; k++) M[r][k] -= q * M[c][k];
-          rhs[r] -= q * rhs[c];
-        }
-      }
-      const x = new Array(n).fill(0);
-      for (let r = n - 1; r >= 0; r--) {
-        let v2 = rhs[r];
-        for (let k = r + 1; k < n; k++) v2 -= M[r][k] * x[k];
-        x[r] = v2 / M[r][r];
-      }
-      const v = x[idx.indexOf(A2)];
-      return v > 1e5 ? Infinity : v;
+      if (direct === Infinity && path === Infinity) return Infinity;
+      if (direct === Infinity) return path;
+      if (path === Infinity) return direct;
+      return direct * path / (direct + path);
     },
     volts(a, b) {
       if (a === b) return 0;
@@ -2690,11 +2716,8 @@ function makeHeatSim(kind) {
         if (is("RO_IN", "RO_OUT")) return f.has("jmp_ro") ? 0 : this.roClosed() ? 0.1 : Infinity;
         if (is("PS_IN", "PS_OUT")) return f.has("jmp_ps") ? 0 : Infinity;
       } else {
-        if (is("T_R", "T_W1")) return this.call ? 0.2 : Infinity;
-        if (is("T_R", "T_W2")) return this.call2 ? 0.2 : Infinity;
-        if (is("T_W1", "H1_A")) return f.has("w_wire") ? Infinity : 0.3;
-        if (is("H1_A", "H1_B")) return f.has("hc1_coil") ? Infinity : 18;
-        if (is("H2_A", "H2_B")) return f.has("hc2_coil") ? Infinity : 18;
+        const c = this.ctrlOhms(a, b);
+        if (c !== null) return c;
         for (const st of [1, 2]) {
           const r = this.stageOhms(st, a, b);
           if (r !== null) return r;
@@ -2732,7 +2755,7 @@ function makeHeatSim(kind) {
           for (let q = 1; q <= 3; q++) {
             const n = (stg - 1) * 3 + q, [, a, b] = ELEM[n];
             if (!this.chainOk(n)) continue;
-            const Pa = p["LS" + n + "_A"], Pb = p["E" + n + "_B"];
+            const Pa = p["E" + n + "_A"], Pb = p["E" + n + "_B"];
             if (!Pa || !Pb) continue;
             const ix = (Pa.x - Pb.x) / RE, iy = (Pa.y - Pb.y) / RE;
             if (a === t) {
@@ -2967,11 +2990,21 @@ function makeHeatSim(kind) {
         this.stageHot[st - 1] = Math.max(0, Math.min(1.2, this.stageHot[st - 1]));
         if (this.stageHot[st - 1] >= 1) this.stageTrip[st - 1] = true;
         else if (this.stageHot[st - 1] < 0.35) this.stageTrip[st - 1] = false;
+        if (this.stageHot[st - 1] >= 1.15) this.secTrip[st - 1] = true;
         this.pots();
       });
     },
     /* parts that are an action, not a swap: the rollout reset button */
     partAction(k) {
+      const m = /^slreset([12])$/.exec(k);
+      if (m) {
+        const n = +m[1], i = n - 1;
+        if (this.faults.has("sec_bad_" + n)) return { ok: false, msg: "You pressed the reset button on SL" + n + ". It does not click and the limit still reads open. The limit has failed." };
+        if (!this.faults.has("sec_trip_" + n) && !this.secTrip[i]) return { ok: false, msg: "You pressed the reset button on SL" + n + ". It was not tripped." };
+        this.faults.delete("sec_trip_" + n);
+        this.secTrip[i] = false;
+        return { ok: true, msg: "Secondary limit SL" + n + " reset. It clicked closed. A secondary only trips when the heat runs away, so find out why before you leave." };
+      }
       if (k !== "roreset") return null;
       if (this.faults.has("rollout_bad")) return { ok: false, msg: "You pressed the rollout reset button. It does not click and the switch still reads open." };
       if (!this.roTripped) return { ok: false, msg: "You pressed the rollout reset button. It was not tripped." };
@@ -5018,9 +5051,14 @@ const LABELH = {
   }
 });
 for (let n = 1; n <= 6; n++) {
-  LABELH["LS" + n + "_A"] = "in";
-  LABELH["LS" + n + "_B"] = "out";
+  LABELH["E" + n + "_A"] = "E" + n;
   LABELH["E" + n + "_B"] = "E" + n;
+}
+for (let n = 1; n <= 2; n++) {
+  LABELH["LS" + n + "_A"] = "LS" + n;
+  LABELH["LS" + n + "_B"] = "LS" + n;
+  LABELH["SL" + n + "_A"] = "SL" + n;
+  LABELH["SL" + n + "_B"] = "SL" + n;
 }
 const ABOVEH = /* @__PURE__ */ new Set(["F1_OUT", "F2_OUT", "F3_OUT", "K2_T1", "K2_T2", "K2_T3", "BLW_1", "BLW_2", "BLW_3", "HC1_T1", "HC1_T2", "HC1_T3", "HC2_T1", "HC2_T2", "HC2_T3", "GV_MV", "GV_C", "IND_1", "IND_2"]);
 function buildPlateG() {
@@ -5209,18 +5247,25 @@ function buildUnitE() {
   const cols = [125, 295, 465, 655, 825, 995];
   for (let n = 1; n <= 6; n++) {
     const x = cols[n - 1];
-    T.push(["LS" + n + "_A", x - 38, 650], ["LS" + n + "_B", x + 38, 650], ["E" + n + "_B", x + 38, 860]);
+    T.push(["E" + n + "_A", x + 38, 650], ["E" + n + "_B", x + 38, 860]);
   }
+  T.push(["LS1_A", 900, 355], ["LS1_B", 950, 355], ["SL1_A", 900, 445], ["SL1_B", 950, 445], ["LS2_A", 1060, 355], ["LS2_B", 1010, 355], ["SL2_A", 1060, 445], ["SL2_B", 1010, 445]);
   let g = topRowH(["R", "W1", "W2", "G", "C"]);
   g += boxH(40, 240, 400, 290, "Heat contactor HC1", "Stage 1 \xB7 W1") + PT.contactor(50, 297, 380, 204, [100, 210, 320], 335, 465, [385, 335, 465], "h1");
   g += boxH(460, 240, 400, 290, "Heat contactor HC2", "Stage 2 \xB7 W2") + PT.contactor(470, 297, 380, 204, [520, 630, 740], 335, 465, [805, 335, 465], "h2");
-  g += boxH(880, 280, 220, 250, "Electric heat", "20 kW, 2 stages");
-  g += `<text class="sub" x="896" y="360" style="font-size:13px">Each element</text><text class="sub" x="896" y="380" style="font-size:13px">3.3 kW at 208 V</text><text class="sub" x="896" y="410" style="font-size:13px">Elements are wired</text><text class="sub" x="896" y="430" style="font-size:13px">in a delta on each</text><text class="sub" x="896" y="450" style="font-size:13px">heat contactor.</text><text class="sub" x="896" y="480" style="font-size:13px">Each has its own</text><text class="sub" x="896" y="500" style="font-size:13px">auto-reset limit.</text>`;
-  g += boxH(40, 560, 1060, 340, "Heater elements", "Stage 1: E1\u2013E3 on HC1 \xB7 Stage 2: E4\u2013E6 on HC2");
+  g += boxH(880, 280, 220, 268, "Heater limits \xB7 24 V", "");
+  [[925, 355], [1035, 355]].forEach(([x, y]) => {
+    g += `<circle cx="${x}" cy="${y}" r="9" fill="#c9d3dc" stroke="#4a525b" stroke-width="2"/>`;
+  });
+  [[925, 445], [1035, 445]].forEach(([x, y]) => {
+    g += `<circle cx="${x}" cy="${y}" r="9" fill="#c9d3dc" stroke="#4a525b" stroke-width="2"/><circle cx="${x}" cy="${y}" r="4.5" fill="#d33a2c"/>`;
+  });
+  g += `<text x="990" y="510" text-anchor="middle" style="font:700 9px sans-serif;fill:#cfd8e0">LS = primary, auto reset</text><text x="990" y="526" text-anchor="middle" style="font:700 9px sans-serif;fill:#cfd8e0">SL = secondary, red reset button</text>`;
+  g += `<rect x="872" y="326" width="208" height="12" rx="4" fill="#efede6" stroke="#8d8672" opacity=".9"/><text x="925" y="335" text-anchor="middle" style="font:700 8px sans-serif;fill:#3a3a3a">STAGE 1 \xB7 W1</text><text x="1035" y="335" text-anchor="middle" style="font:700 8px sans-serif;fill:#3a3a3a">STAGE 2 \xB7 W2</text>`;
+  g += boxH(40, 560, 1060, 340, "Heater elements", "Stage 1: E1\u2013E3 on HC1 \xB7 Stage 2: E4\u2013E6 on HC2 \xB7 delta, 3.3 kW each");
   g += `<line x1="560" y1="600" x2="560" y2="890" stroke="#3a4651" stroke-width="2" stroke-dasharray="6 6"/>`;
   for (let n = 1; n <= 6; n++) {
     const x = cols[n - 1], [, a, b] = ELEM[n];
-    g += `<rect x="${x - 30}" y="${636}" width="60" height="28" rx="6" fill="url(#ptBlack)" stroke="#0b0e11"/><circle cx="${x}" cy="650" r="11" fill="#c9d3dc" stroke="#4a525b" stroke-width="2"/><text x="${x}" y="654" text-anchor="middle" style="font:800 8px sans-serif;fill:#2a2a2a">LS${n}</text>`;
     let d = `M${x + 38} 674`;
     for (let yy = 684; yy < 840; yy += 10) d += ` Q${x + 54} ${yy - 5} ${x + 38} ${yy} Q${x + 22} ${yy + 5} ${x + 38} ${yy + 10}`;
     g += `<rect x="${x + 14}" y="672" width="48" height="172" rx="6" fill="#20272e" stroke="#0b0e11"/><path d="${d}" fill="none" stroke="#9aa3ab" stroke-width="3"/>`;
@@ -5235,12 +5280,14 @@ function buildUnitE() {
   g += wireH("M440 222 V115 H510", c1) + wireH("M452 228 V195 H510", c2);
   for (let n = 1; n <= 6; n++) {
     const x = cols[n - 1], [st, a, b] = ELEM[n], tx = st === 1 ? [100, 210, 320] : [520, 630, 740], ya = 560 + n * 4, yb = 880 + n * 3;
-    g += wireH(`M${tx[a - 1]} 465 V${ya} H${x - 38} V650`, legC[a - 1]);
+    g += wireH(`M${tx[a - 1]} 465 V${ya} H${x + 38} V650`, legC[a - 1]);
     g += wireH(`M${x + 38} 860 V${yb} H${tx[b - 1] + (st === 1 ? -4 : 4)} V${ya + 2}`, legC[b - 1]);
   }
   g += wireH("M610 115 H700 V150 H765", hot) + wireH("M809 150 H880 V115 H935", hot);
-  g += wireH("M995 115 H1062 V258 H385 V335", hot) + wireH("M995 165 H1072 V264 H805 V335", hot) + wireH("M935 165 H870 V270 H860 V905 H385 V1010", hot);
-  g += wireH("M610 195 H690 V240 H1108 V1205 H385 V1140", com) + wireH("M935 215 H1108", com) + wireH("M385 465 V520 H450 V545 H1108", com) + wireH("M805 465 V545", com) + wireH("M1050 1010 H1108", com);
+  g += wireH("M995 115 H1062 V272 H886 V355 H900", hot) + wireH("M950 355 V400 H900 V445", hot) + wireH("M950 445 V536 H448 V300 H385 V335", hot);
+  g += wireH("M995 165 H1092 V355 H1060", hot) + wireH("M1010 355 V400 H1060 V445", hot) + wireH("M1010 445 V544 H874 V318 H805 V335", hot);
+  g += wireH("M935 165 H870 V270 H860 V905 H385 V1010", hot);
+  g += wireH("M610 195 H690 V240 H1108 V1205 H385 V1140", com) + wireH("M935 215 H1108", com) + wireH("M385 465 V500 H430 V552 H1108", com) + wireH("M805 465 V552", com) + wireH("M1050 1010 H1108", com);
   g += wireH("M100 1140 V1215 H540 V1140", c1) + wireH("M210 1140 V1223 H610 V1140", c2) + wireH("M320 1140 V1231 H680 V1140", c3);
   g += termsH(T, NODESE);
   return g;
@@ -5308,13 +5355,12 @@ function buildSchematicE() {
     const base = hc === "HC1" ? 0 : 3;
     for (let k = 1; k <= 3; k++) {
       const n = base + k, [, a, b] = ELEM[n], y = y0 - 10 + (k - 1) * 46;
-      s += W(`M420 ${ys2[a - 1]} H${440 + k * 6} V${y + 16} H520`, COL[a - 1]) + D("LS" + n + "_A", 520, y + 16, "u") + LD.sw(550, y + 16, 40, "") + T(550, y + 20, "LS" + n);
-      s += D("LS" + n + "_B", 580, y + 16, "u") + W(`M580 ${y + 16} H620`, COL[a - 1]) + LD.heater(660, y + 16) + T(660, y + 4, "E" + n);
+      s += W(`M420 ${ys2[a - 1]} H${440 + k * 6} V${y + 16} H580`, COL[a - 1]) + D("E" + n + "_A", 580, y + 16, "u") + W(`M580 ${y + 16} H620`, COL[a - 1]) + LD.heater(660, y + 16) + T(660, y + 4, "E" + n);
       s += D("E" + n + "_B", 700, y + 16, "u") + W(`M700 ${y + 16} H${740 + k * 8} V${ys2[b - 1]} H420`, COL[b - 1]);
     }
   };
-  stage(1, 210, "HEAT STAGE 1 (HC1): E1\u2013E3 in delta, each through its limit", "HC1");
-  stage(2, 410, "HEAT STAGE 2 (HC2): E4\u2013E6 in delta, each through its limit", "HC2");
+  stage(1, 210, "HEAT STAGE 1 (HC1): E1\u2013E3 in delta", "HC1");
+  stage(2, 410, "HEAT STAGE 2 (HC2): E4\u2013E6 in delta", "HC2");
   const ys = [610, 660, 710];
   s += LD.rung(3, 300, 570, "INDOOR BLOWER (through K2 contactor)");
   ys.forEach((y, i) => {
@@ -5334,8 +5380,18 @@ function buildSchematicE() {
   s += W(`M590 840 V${C0} H${X2}`, "lv") + D("SEC_C", 590, 866, "r");
   s += `<rect class="p" x="110" y="960" width="150" height="230" rx="4"/>` + T(185, 978, "THERMOSTAT") + T(185, 1206, "heat mode brings on G with W1");
   s += W(`M${X1} 1075 H100`, "lv") + D("T_R", 100, 1075, "d") + W("M100 1075 H130 M130 1010 V1150", "lv") + LD.jn(130, 1075);
-  [[1010, "T_W1", "H1_A", "HC1", "STAGE 1 HEAT"], [1080, "T_W2", "H2_A", "HC2", "STAGE 2 HEAT"], [1150, "T_G", "FRLY_A", "K2", "BLOWER"]].forEach(([y, id, ca, k, lab], i) => {
-    s += W(`M130 ${y} H160 M180 ${y} H285 H${X2}`, "lv") + LD.contact(170, y, "") + D(id, 285, y, "d") + LD.rung(5 + i, 320, y - 20, lab);
+  [[1010, "T_W1", "H1_A", "HC1", "STAGE 1 HEAT through LS1 (primary, auto reset) and SL1 (secondary, manual reset)", 1], [1080, "T_W2", "H2_A", "HC2", "STAGE 2 HEAT through LS2 (primary, auto reset) and SL2 (secondary, manual reset)", 2], [1150, "T_G", "FRLY_A", "K2", "BLOWER", 0]].forEach(([y, id, ca, k, lab, l0], i) => {
+    s += LD.contact(170, y, "") + D(id, 285, y, "d") + LD.rung(5 + i, 320, y - 34, lab);
+    if (!l0) s += W(`M130 ${y} H160 M180 ${y} H${X2}`, "lv");
+    else {
+      let d = `M130 ${y} H160 M180 ${y} H400`;
+      [["LS", "auto"], ["SL", "manual"]].forEach(([k2, r], j) => {
+        const x = 440 + j * 200;
+        s += LD.sw(x, y, 40, "") + T(x, y + 4, k2 + l0) + LD.dot(x - 40, y, "in", "u") + LD.dot(x + 40, y, "out", "u");
+        d += ` M${x - 40} ${y} H${x - 20} M${x + 20} ${y} H${j < 1 ? x + 160 : X2}`;
+      });
+      s += W(d, "lv");
+    }
     s += LD.coil(870, y, k) + D(ca, 850, y, "d") + D(k === "K2" ? "FRLY_B" : k === "HC1" ? "H1_B" : "H2_B", 890, y, "d");
   });
   s += D("T_C", X2, 1220, "l") + D("GND", X2, 1256, "l") + T(X2 - 12, 1282, "chassis ground", "end");
@@ -5357,11 +5413,527 @@ function buildSpecsG() {
 function buildSpecsE() {
   return "<h3>Sequence of operation (electric heat)</h3>" + tblH(["Step", "What happens", "What you can check"], [
     ["1", "Thermostat closes R to W1 and R to G", "24 V W1 to C and G to C"],
-    ["2", "HC1 coil pulls in stage 1, K2 starts the blower", "24 V across the HC1 coil, about 18 \u03A9 cold"],
-    ["3", "E1, E2 and E3 heat through their limits", "About 16 A on each element lead, about 28 A on each HC1 load terminal"],
-    ["4", "A colder room adds W2: HC2 pulls in stage 2", "E4 \u2013 E6 add another 10 kW"],
-    ["5", "Poor airflow overheats the elements", "The auto-reset limits open, then close again after cooling"]
-  ]) + "<h3>Elements and limits</h3>" + tblH(["Item", "Value"], [["Each element", "3.3 kW at 208 V, 13 \u03A9 by itself"], ["Element current", "about 16 A"], ["One element measured in place, power off", "about 8.7 \u03A9 (the other two elements are in parallel)"], ["An open element measured in place", "about 26 \u03A9, not OL, for the same reason"], ["An open limit measured in place", "about 39 \u03A9"], ["Open limit or element with the contactor closed", "208 V across the open part, 0 V across the good one"], ["Heat contactor coils", "about 18 \u03A9"], ["Temperature rise, 20 kW at 2,000 CFM", "about 31\xB0F"]]) + "<p>Elements in each stage are wired in a delta: E1 from T1 to T2, E2 from T2 to T3, E3 from T3 to T1 (E4 \u2013 E6 the same on HC2). Measured with power off, every element reads through the other two. Clamp each lead with the power on, or lift one end before you ohm an element.</p><h3>Line voltage</h3>" + tblH(["Point", "Normal reading"], [["Any two legs at the disconnect", "\u2248 208 V"], ["Any leg to ground", "\u2248 120 V"], ["Transformer secondary", "24 \u2013 28 V"]]);
+    ["2", "W1 passes through primary limit LS1 and secondary limit SL1 (24 V) to the HC1 coil. K2 starts the blower", "0 V across each closed limit, 24 V across the HC1 coil (about 18 \u03A9 cold)"],
+    ["3", "HC1 puts line voltage on E1, E2 and E3", "About 16 A on each element lead, about 28 A on each HC1 load terminal"],
+    ["4", "A colder room adds W2: through LS2 and SL2 to the HC2 coil, stage 2 pulls in", "E4 \u2013 E6 add another 10 kW"],
+    ["5", "Poor airflow overheats the elements", "The primary limit opens and drops out its stage, then closes again after cooling"],
+    ["6", "If the primary fails to open (or is jumped out), the heat keeps climbing", "The secondary limit opens and stays open until someone presses its red reset button"]
+  ]) + "<h3>Elements and limits</h3>" + tblH(["Item", "Value"], [["Each element", "3.3 kW at 208 V, 13 \u03A9 by itself"], ["Element current", "about 16 A"], ["One element measured in place, power off", "about 8.7 \u03A9 (the other two elements are in parallel)"], ["An open element measured in place", "about 26 \u03A9, not OL, for the same reason"], ["Primary limit LS", "auto reset, opens first (lower setting), closes again once cool"], ["Secondary limit SL", "manual reset, opens about 220\xB0F, red button to reset after it cools"], ["Limit, closed", "under 1 \u03A9, 0 V across it"], ["Limit, open, on a heat call", "24 V across it, OL with the power off. Its whole stage stays off"], ["Heat contactor coils", "about 18 \u03A9"], ["Temperature rise, 20 kW at 2,000 CFM", "about 31\xB0F"]]) + "<p>The limits are in the 24 V control circuit, in series with the heat contactor coils: W1 \u2192 LS1 \u2192 SL1 \u2192 HC1 coil, W2 \u2192 LS2 \u2192 SL2 \u2192 HC2 coil. A tripped secondary means the heat ran away: the primary failed or was jumped, or the airflow was lost. Find the cause before you reset it.</p><p>Elements in each stage are wired in a delta: E1 from T1 to T2, E2 from T2 to T3, E3 from T3 to T1 (E4 \u2013 E6 the same on HC2). Measured with power off, every element reads through the other two. Clamp each lead with the power on, or lift one end before you ohm an element.</p><h3>Line voltage</h3>" + tblH(["Point", "Normal reading"], [["Any two legs at the disconnect", "\u2248 208 V"], ["Any leg to ground", "\u2248 120 V"], ["Transformer secondary", "24 \u2013 28 V"]]);
+}
+const WD = {
+  /* a wire through orthogonal waypoints; colour printed in the line on the chosen run (default: the longest) */
+  wire(pts, col, opt) {
+    opt = opt || {};
+    let d = "M" + pts[0][0] + " " + pts[0][1], best = -1, seg = 0;
+    for (let i = 1; i < pts.length; i++) {
+      d += " L" + pts[i][0] + " " + pts[i][1];
+      const len = Math.abs(pts[i][0] - pts[i - 1][0]) + Math.abs(pts[i][1] - pts[i - 1][1]);
+      if (len > best) {
+        best = len;
+        seg = i;
+      }
+    }
+    if (opt.seg) seg = opt.seg;
+    let s = `<path class="wdW${opt.field ? " fld" : ""}" d="${d}"/>`;
+    if (col) {
+      const a = pts[seg - 1], b = pts[seg], f = opt.at != null ? opt.at : 0.5;
+      s += WD.tag(a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, col, a[0] === b[0]);
+    }
+    return s;
+  },
+  /* the colour lettered into the wire */
+  tag(x, y, t, vert) {
+    const w = t.length * 6.6 + 8;
+    const body = `<rect class="wdGap" x="${-w / 2}" y="-6" width="${w}" height="12"/><text class="wdTag" x="0" y="3.6" text-anchor="middle">${t}</text>`;
+    return `<g transform="translate(${x} ${y})${vert ? " rotate(-90)" : ""}">${body}</g>`;
+  },
+  dot(x, y) {
+    return `<circle class="wdDot" cx="${x}" cy="${y}" r="3.3"/>`;
+  },
+  /* a device terminal: number or letter in a circle */
+  tc(x, y, t, r) {
+    r = r || 9;
+    return `<circle class="wdTc" cx="${x}" cy="${y}" r="${r}"/><text class="wdTn" x="${x}" y="${y + 3.4}" text-anchor="middle">${t}</text>`;
+  },
+  /* a terminal-board position: number in a square, with its function lettered above or beside */
+  tb(x, y, n, lab, side) {
+    const o = side === "l" ? [-14, 4, "end"] : side === "r" ? [14, 4, "start"] : [0, -13, "middle"];
+    return `<rect class="wdTc" x="${x - 7}" y="${y - 7}" width="14" height="14"/><text class="wdTn" x="${x}" y="${y + 3.4}" text-anchor="middle">${n}</text>` + (lab ? `<text class="wdT" x="${x + o[0]}" y="${y + o[1]}" text-anchor="${o[2]}">${lab}</text>` : "");
+  },
+  /* plug connector in a horizontal wire: chevrons pointing along the wire and the plug pin name */
+  plug(x, y, lab) {
+    return `<path class="wdSym" d="M${x - 6} ${y - 5} L${x - 1} ${y} L${x - 6} ${y + 5} M${x} ${y - 5} L${x + 5} ${y} L${x} ${y + 5}"/><text class="wdS" x="${x}" y="${y - 9}" text-anchor="middle">${lab}</text>`;
+  },
+  txt(x, y, t, cls, a) {
+    return `<text class="${cls || "wdT"}" x="${x}" y="${y}" text-anchor="${a || "start"}">${t}</text>`;
+  },
+  lines(x, y, arr, cls, dy) {
+    return arr.map((t, i) => WD.txt(x, y + i * (dy || 12), t.replace(/^ +/, (m) => "\xA0".repeat(m.length)), cls || "wdS")).join("");
+  },
+  /* a safety switch in a horizontal wire between x1 and x2, in its normal running position (closed), NEMA style:
+     the blade pivots on the left terminal; the actuator hangs below on a dashed mechanical link.
+     mode 'rise' = opens on a RISE (normally closed: blade rests on top of the fixed contact, a rise lifts it off)
+     mode 'fall' = opens on a FALL (normally open, held closed: pressure / temperature holds the blade up against the fixed
+     contact; when it falls the blade drops away and opens). kind: 'press', 'dp' (differential pressure), 'temp', 'float' */
+  swSym(x1, x2, y, kind, mode2) {
+    const a = x1 + 7, b = x2 - 7, up = mode2 === "rise", r = 6.5;
+    const sx = a + r * 0.92, sy = y + (up ? 1.5 : -1.5), ex = b - r * 0.35, ey = y + (up ? -r * 0.95 : r * 0.95);
+    const m = a + (b - a) * 0.47, my = sy + (ey - sy) * ((m - sx) / (ex - sx)), ay = y + 16;
+    let s = `<circle class="wdTc" cx="${a}" cy="${y}" r="${r}"/><circle class="wdTc" cx="${b}" cy="${y}" r="${r}"/>`;
+    s += `<path class="wdSym" d="M${sx} ${sy} L${ex} ${ey}" style="stroke-width:2"/><path class="wdSym" d="M${m} ${my} V${ay}" style="stroke-width:1.8"/>`;
+    if (kind === "press" || kind === "dp") s += `<path class="wdSym" d="M${m - 7} ${ay} H${m + 7} L${m + 14} ${ay + 7} L${m + 17} ${ay + 18} H${m - 17} L${m - 14} ${ay + 7} Z" style="stroke-width:1.6"/>` + (kind === "dp" ? `<text class="wdTn" x="${m}" y="${ay + 14}" text-anchor="middle" style="font-size:7.5px">\u0394P</text>` : "");
+    else if (kind === "temp") s += `<path class="wdSym" d="M${m} ${ay} q-5 2.5 0 5 q5 2.5 0 5"/><rect class="wdTc" x="${m - 4}" y="${ay + 10}" width="8" height="13" rx="4"/>`;
+    else if (kind === "float") s += `<circle class="wdTc" cx="${m}" cy="${ay + 8}" r="8"/>`;
+    return s;
+  },
+  sw(x1, x2, y, kind, mode2, name, sub) {
+    const m = (x1 + x2) / 2;
+    return WD.swSym(x1, x2, y, kind, mode2) + WD.txt(m, y - 18, name, "wdT", "middle");
+  },
+  /* key to the switch symbols */
+  swKey(x, y) {
+    const items = [["press", "rise", "PRESSURE SWITCH", "OPENS ON RISE (N.C.)"], ["press", "fall", "PRESSURE SWITCH", "OPENS ON FALL (N.O. HELD CLOSED)"], ["temp", "fall", "TEMPERATURE SWITCH", "OPENS ON FALL"], ["float", "rise", "LIQUID LEVEL (FLOAT)", "OPENS ON RISE"]];
+    let s = `<rect class="wdBox" x="${x}" y="${y}" width="180" height="${items.length * 104 + 30}"/>` + WD.txt(x + 90, y + 18, "SWITCH SYMBOLS", "wdT", "middle");
+    items.forEach(([k, md, a, b], i) => {
+      const cx = x + 60, yy = y + 44 + i * 104;
+      s += WD.wire([[cx - 14, yy], [cx, yy]]) + WD.swSym(cx, cx + 60, yy, k, md) + WD.wire([[cx + 60, yy], [cx + 74, yy]]);
+      [a].concat(b.split(" (").map((t, j) => j ? "(" + t : t)).forEach((t, j) => {
+        s += WD.txt(x + 90, yy + 52 + j * 12, t, "wdS", "middle");
+      });
+    });
+    return s;
+  },
+  /* relay contact (normally open), terminals in circles */
+  noContact(x1, x2, y, t1, t2, name) {
+    const m = (x1 + x2) / 2;
+    return WD.tc(x1, y, t1) + WD.tc(x2, y, t2) + `<path class="wdSym" d="M${x1 + 9} ${y} H${m - 5} M${m - 5} ${y - 9} V${y + 9} M${m + 5} ${y - 9} V${y + 9} M${m + 5} ${y} H${x2 - 9}"/>` + (name ? WD.txt(m, y - 16, name, "wdT", "middle") : "");
+  },
+  /* a coil in a horizontal wire: (A)(NAME)(B) */
+  coil(x, y, name, t1, t2) {
+    return WD.tc(x - 30, y, t1 || "A") + `<path class="wdW" d="M${x - 21} ${y} H${x - 17} M${x + 17} ${y} H${x + 21}"/><circle class="wdTc" cx="${x}" cy="${y}" r="17"/><text class="wdTn" x="${x}" y="${y + 3.6}" text-anchor="middle">${name}</text>` + WD.tc(x + 30, y, t2 || "B");
+  },
+  /* contactor pole in a vertical wire (normally open) */
+  pole(x, y, name) {
+    return `<path class="wdSym" d="M${x} ${y - 14} V${y - 4} M${x - 9} ${y - 4} H${x + 9} M${x - 9} ${y + 4} H${x + 9} M${x} ${y + 4} V${y + 14}"/>` + (name ? WD.txt(x + 12, y + 3, name, "wdS") : "");
+  },
+  motor(x, y, r, name, sub) {
+    return `<circle class="wdTc" cx="${x}" cy="${y}" r="${r}"/>` + WD.txt(x, y + 3, name, "wdT", "middle") + (sub ? WD.txt(x, y + 16, sub, "wdS", "middle") : "");
+  },
+  fuse(x, y, lab) {
+    return `<path class="wdW" d="M${x - 12} ${y} q6 -9 12 0 q6 9 12 0"/>` + WD.txt(x, y - 10, lab, "wdS", "middle");
+  },
+  ground(x, y, lab) {
+    return `<path class="wdSym" d="M${x} ${y} V${y + 10} M${x - 11} ${y + 10} H${x + 11} M${x - 7} ${y + 15} H${x + 7} M${x - 3} ${y + 20} H${x + 3}"/>` + (lab ? WD.txt(x + 12, y + 8, lab, "wdS") : "");
+  },
+  /* resistive heater in a vertical wire */
+  heater(x, y1, y2) {
+    const n = 6, h = (y2 - y1) / n;
+    let d = `M${x} ${y1}`;
+    for (let i = 0; i < n; i++) d += ` L${x + (i % 2 ? -7 : 7)} ${y1 + h * (i + 0.5)}`;
+    return `<path class="wdSym" d="${d} L${x} ${y2}"/>`;
+  },
+  legend(x, y, w, items) {
+    const per = Math.ceil(items.length / 2);
+    return `<rect class="wdBox" x="${x}" y="${y}" width="${w}" height="${per * 13 + 32}"/>` + WD.txt(x + w / 2, y + 16, "LEGEND", "wdT", "middle") + items.map(([a, b], i) => {
+      const xx = x + 10 + Math.floor(i / per) * (w / 2), yy = y + 32 + i % per * 13;
+      return WD.txt(xx, yy, a, "wdT") + WD.txt(xx + 52, yy, b, "wdS");
+    }).join("");
+  }
+};
+function buildWiring3() {
+  const hv = CUR && CUR.v460, v = hv ? "460" : "208/230";
+  let s = '<g class="wd"><rect class="wdPaper" x="0" y="0" width="1500" height="1170"/>';
+  s += WD.txt(40, 46, "POWER SCHEMATIC", "wdH");
+  s += `<rect class="wdBox fld" x="40" y="120" width="96" height="150"/>` + WD.lines(42, 96, ["DISCONNECT", "(FIELD SUPPLIED)"], "wdS");
+  s += WD.lines(150, 296, ["FIELD POWER SUPPLY", v + "-3-60"], "wdS");
+  [["L1", 160], ["L2", 200], ["L3", 240]].forEach(([l, y]) => {
+    s += WD.tb(120, y, l.slice(1), "", "") + WD.txt(100, y - 6, l, "wdT", "end") + WD.wire([[20, y], [113, y]], "", { field: true });
+  });
+  s += WD.wire([[88, 270], [88, 330]], "GRN/YEL", { field: true }) + WD.ground(88, 330, "GND");
+  s += WD.wire([[127, 160], [1140, 160]], "BLK", { at: 0.05 }) + WD.wire([[127, 200], [1200, 200]], "YEL", { at: 0.05 }) + WD.wire([[127, 240], [1060, 240]], "BLU", { at: 0.05 });
+  const cx = [290, 330, 370];
+  cx.forEach((x, i) => {
+    const ry = [160, 200, 240][i];
+    s += WD.dot(x, ry) + WD.wire([[x, ry], [x, 296]]) + WD.pole(x, 310, i === 0 ? "C" : "") + WD.wire([[x, 324], [x, i === 1 ? 431 : 441]], ["BLK", "YEL", "BLU"][i], { at: 0.86 });
+    s += WD.txt(x - 4, 292, "L" + (i + 1), "wdS", "end") + WD.txt(x - 4, 336, "T" + (i + 1), "wdS", "end");
+  });
+  s += WD.motor(330, 492, 46, "COMP", "3-PH") + WD.tc(290, 450, "T1", 9) + WD.tc(330, 440, "T2", 9) + WD.tc(370, 450, "T3", 9);
+  s += WD.dot(290, 370) + WD.wire([[290, 370], [660, 370]], "BLK", { at: 0.5 }) + WD.dot(540, 370) + WD.wire([[540, 370], [540, 423]]);
+  s += WD.dot(330, 390) + WD.wire([[330, 390], [510, 390], [510, 428]], "YEL", { at: 0.5, seg: 1 });
+  s += WD.motor(540, 480, 36, "OFM", "PSC") + WD.tc(510, 437, "C", 8) + WD.tc(540, 432, "R", 8) + WD.tc(570, 437, "S", 8);
+  s += WD.wire([[570, 429], [570, 410], [612, 410]], "BRN", { seg: 2 }) + WD.capH(612, 410) + WD.wire([[628, 410], [660, 410], [660, 370]], "BRN", { seg: 1 }) + WD.dot(660, 370);
+  s += WD.txt(620, 436, "CAP", "wdT", "middle") + WD.txt(620, 448, "7.5 MFD", "wdS", "middle");
+  s += WD.dot(730, 160) + WD.wire([[730, 160], [730, 290]]) + WD.heater(730, 290, 340) + WD.wire([[730, 340], [730, 360], [760, 360], [760, 200]]) + WD.dot(760, 200);
+  s += WD.txt(718, 318, "CCH", "wdT", "end");
+  [830, 870, 910].forEach((x, i) => {
+    const ry = [160, 200, 240][i];
+    s += WD.dot(x, ry) + WD.wire([[x, ry], [x, 296]]) + WD.pole(x, 310, i === 0 ? "IFC" : "") + WD.wire([[x, 324], [x, i === 1 ? 431 : 441]], ["BLK", "YEL", "BLU"][i], { at: 0.55 });
+    s += WD.txt(x - 4, 292, "L" + (i + 1), "wdS", "end") + WD.txt(x - 4, 336, "T" + (i + 1), "wdS", "end");
+  });
+  s += WD.motor(870, 492, 46, "IFM", "3-PH") + WD.tc(830, 450, "T1", 9) + WD.tc(870, 440, "T2", 9) + WD.tc(910, 450, "T3", 9);
+  s += `<rect class="wdBox" x="970" y="300" width="110" height="64"/>` + WD.txt(1025, 352, "PMR", "wdT", "middle");
+  [[990, 160, "L1"], [1025, 200, "L2"], [1060, 240, "L3"]].forEach(([x, ry, t]) => {
+    s += WD.dot(x, ry) + WD.wire([[x, ry], [x, 309]]) + WD.tc(x, 318, t, 9);
+  });
+  s += WD.dot(1140, 160) + WD.dot(1200, 200) + WD.wire([[1140, 160], [1140, 302]]) + WD.wire([[1200, 200], [1200, 302]], "RED", { at: 0.7 });
+  s += WD.tc(1140, 311, "H1", 9) + WD.tc(1200, 311, "H2", 9) + `<path class="wdSym" d="M1140 320 V330 q7.5 -10 15 0 q7.5 -10 15 0 q7.5 -10 15 0 q7.5 -10 15 0 V320 M1140 340 H1200 M1140 345 H1200 M1140 355 q7.5 10 15 0 q7.5 10 15 0 q7.5 10 15 0 q7.5 10 15 0"/>`;
+  s += WD.tc(1140, 372, "X1", 9) + WD.tc(1200, 372, "X2", 9) + WD.txt(1220, 330, "TRAN", "wdT") + WD.txt(1220, 343, (hv ? "460" : "208") + " V PRI", "wdS") + WD.txt(1220, 355, "24 VAC SEC", "wdS");
+  s += `<path class="wdSym" d="M1140 363 V355 M1200 363 V355"/>`;
+  s += WD.txt(40, 566, "CONTROL CIRCUIT  \xB7  24 VAC", "wdH");
+  s += WD.wire([[1140, 381], [1140, 600], [700, 600]], "RED", { seg: 1, at: 0.45 }) + WD.fuse(688, 600, "FU  3 AMPS") + WD.wire([[676, 600], [230, 600], [230, 633]], "RED", { seg: 1 });
+  const RX = 1420;
+  s += WD.wire([[1200, 381], [1200, 600], [RX, 600], [RX, 900]], "BRN", { seg: 2, at: 0.25 }) + WD.dot(1340, 600) + WD.wire([[1340, 600], [1340, 618]]) + WD.ground(1340, 618, "");
+  s += WD.txt(RX + 8, 596, "TRAN X2", "wdS") + WD.txt(1356, 634, "GRN/YEL", "wdS");
+  [["R", 640, 1], ["Y", 720, 2], ["G", 830, 3], ["C", 900, 4]].forEach(([t, y, n]) => {
+    s += WD.tb(230, y, n, "", "") + WD.txt(t === "R" ? 244 : 230, y - 12, t, "wdT", t === "R" ? "start" : "middle");
+  });
+  s += WD.txt(222, 940, "TB", "wdT");
+  s += `<rect class="wdBox fld" x="50" y="620" width="100" height="300"/>` + WD.lines(54, 940, ["THERMOSTAT", "(FIELD SUPPLIED)"], "wdS");
+  [["R", 640, "RED"], ["Y", 720, "YEL"], ["G", 830, "GRN"], ["C", 900, "BLU"]].forEach(([t, y, c]) => {
+    s += WD.tb(140, y, t, "", "") + WD.wire([[147, y], [223, y]], c, { field: true });
+  });
+  const Y = 720;
+  s += WD.wire([[237, Y], [300, Y]], "YEL") + WD.plug(306, Y, "PL1-1") + WD.wire([[311, Y], [370, Y]], "YEL");
+  s += WD.sw(370, 430, Y, "press", "rise", "HPS", "HIGH PRESSURE") + WD.wire([[430, Y], [510, Y]], "BLU");
+  s += WD.sw(510, 570, Y, "press", "fall", "LPS", "LOW PRESSURE") + WD.wire([[570, Y], [600, Y]]) + WD.plug(606, Y, "PL1-2") + WD.wire([[611, Y], [650, Y]], "BLU", { at: 0.4 });
+  s += WD.sw(650, 710, Y, "float", "rise", "COF", "CONDENSATE LEVEL") + WD.wire([[710, Y], [790, Y]], "BLU");
+  s += WD.sw(790, 850, Y, "temp", "fall", "FS", "COIL TEMPERATURE") + WD.wire([[850, Y], [930, Y]], "BLU");
+  s += WD.sw(930, 990, Y, "dp", "rise", "PFS", "FILTER PRESSURE DROP") + WD.wire([[990, Y], [1051, Y]], "BLU");
+  s += WD.noContact(1060, 1120, Y, "11", "14", "PMR") + WD.wire([[1129, Y], [1220, Y]], "VIO");
+  s += WD.coil(1250, Y, "C") + WD.wire([[1289, Y], [RX, Y]], "BRN") + WD.dot(RX, Y);
+  s += WD.wire([[237, 830], [1220, 830]], "GRN", { at: 0.45 }) + WD.coil(1250, 830, "IFC") + WD.wire([[1289, 830], [RX, 830]], "BRN") + WD.dot(RX, 830);
+  s += WD.wire([[237, 900], [RX, 900]], "BRN", { at: 0.45 });
+  s += WD.lines(40, 980, [
+    "NOTE 1 - HPS, LPS, COF, FS AND PFS ARE WIRED IN SERIES IN THE Y CIRCUIT AND SHOWN IN THEIR NORMAL RUNNING POSITION (CLOSED).",
+    "         ANY ONE THAT OPENS DROPS OUT THE COMPRESSOR CONTACTOR.",
+    "NOTE 2 - PMR CONTACT 11-14 CLOSES ONLY WHEN ALL THREE PHASES ARE PRESENT, BALANCED AND IN THE RIGHT ROTATION.",
+    "NOTE 3 - TRANSFORMER SECONDARY X2 IS GROUNDED. ALL 24 VAC COMMONS RETURN TO X2.",
+    "NOTE 4 - DASHED LINES ARE FIELD WIRING. A DOT IS A CONNECTION; LINES THAT CROSS WITH NO DOT ARE NOT JOINED.",
+    "NOTE 5 - USE COPPER CONDUCTORS ONLY. DISCONNECT ALL POWER BEFORE SERVICING."
+  ], "wdS", 15);
+  s += WD.legend(1010, 950, 450, [
+    ["C", "COMPRESSOR CONTACTOR (K1)"],
+    ["CAP", "FAN RUN CAPACITOR"],
+    ["CCH", "CRANKCASE HEATER"],
+    ["COF", "CONDENSATE OVERFLOW SW"],
+    ["COMP", "COMPRESSOR"],
+    ["FS", "FREEZESTAT"],
+    ["FU", "24 VAC FUSE"],
+    ["HPS", "HIGH PRESSURE SWITCH"],
+    ["IFC", "INDOOR FAN CONTACTOR (K2)"],
+    ["IFM", "INDOOR FAN MOTOR"],
+    ["LPS", "LOW PRESSURE SWITCH"],
+    ["OFM", "OUTDOOR FAN MOTOR"],
+    ["PFS", "FILTER PRESSURE SWITCH"],
+    ["PL", "PLUG"],
+    ["PMR", "PHASE MONITOR RELAY"],
+    ["TB", "TERMINAL BOARD"],
+    ["TRAN", "TRANSFORMER"]
+  ]);
+  s += WD.txt(750, 1150, "Fig. 1 \u2014 Main Control Box Circuit \u2014 Packaged Rooftop Unit, " + v + "-3-60, Cooling", "wdCap", "middle");
+  return s + "</g>";
+}
+Object.assign(WD, {
+  /* field disconnect, line terminals and line rails across the top; ends = where each rail stops */
+  supply(v, ph, ends, tx, ty) {
+    const L = ph === 1 ? [["L1", 160], ["L2", 200]] : [["L1", 160], ["L2", 200], ["L3", 240]], cols = ["BLK", "YEL", "BLU"];
+    let s = `<rect class="wdBox fld" x="40" y="120" width="96" height="${ph === 1 ? 110 : 150}"/>` + WD.lines(42, 96, ["DISCONNECT", "(FIELD SUPPLIED)"], "wdS");
+    s += WD.lines(tx || 150, ty || 296, ["FIELD POWER SUPPLY", v + "-" + ph + "-60"], "wdS");
+    L.forEach(([l, y], i) => {
+      s += WD.tb(120, y, l.slice(1), "", "") + WD.txt(100, y - 6, l, "wdT", "end") + WD.wire([[20, y], [113, y]], "", { field: true }) + WD.wire([[127, y], [ends[i], y]], cols[i], { at: 0.05 });
+    });
+    const gy = ph === 1 ? 230 : 270;
+    return s + WD.wire([[88, gy], [88, 330]], "GRN/YEL", { field: true }) + WD.ground(88, 330, "GND");
+  },
+  /* control transformer: H1 on the L1 rail at x, H2 on the L2 rail at x+60, X1/X2 at y 372 */
+  tran(x, pri) {
+    const x2 = x + 60;
+    let s = WD.dot(x, 160) + WD.dot(x2, 200) + WD.wire([[x, 160], [x, 302]]) + WD.wire([[x2, 200], [x2, 302]], "RED", { at: 0.7 });
+    s += WD.tc(x, 311, "H1", 9) + WD.tc(x2, 311, "H2", 9) + `<path class="wdSym" d="M${x} 320 V330 q7.5 -10 15 0 q7.5 -10 15 0 q7.5 -10 15 0 q7.5 -10 15 0 V320 M${x} 340 H${x2} M${x} 345 H${x2} M${x} 355 q7.5 10 15 0 q7.5 10 15 0 q7.5 10 15 0 q7.5 10 15 0"/>`;
+    s += WD.tc(x, 372, "X1", 9) + WD.tc(x2, 372, "X2", 9) + WD.txt(x2 + 20, 330, "TRAN", "wdT") + WD.txt(x2 + 20, 343, pri, "wdS") + WD.txt(x2 + 20, 355, "24 VAC SEC", "wdS");
+    return s + `<path class="wdSym" d="M${x} 363 V355 M${x2} 363 V355"/>`;
+  },
+  /* control heading, X1 through the fuse to TB R, X2 common rail on the right (grounded), terminal board and the
+     field-wired thermostat. rows: [[letter, y, field colour]], R first and C last */
+  ctrlHead(tx, top, rows, fx) {
+    const RX = 1420, cy = top + 34, yR = rows[0][1], yC = rows[rows.length - 1][1];
+    let s = WD.txt(40, top, "CONTROL CIRCUIT  \xB7  24 VAC", "wdH");
+    s += WD.wire([[tx, 381], [tx, cy], [fx + 12, cy]], "RED", { seg: 1, at: 0.45 }) + WD.fuse(fx, cy, "FU  3 AMPS") + WD.wire([[fx - 12, cy], [230, cy], [230, yR - 7]], "RED", { seg: 1 });
+    s += WD.wire([[tx + 60, 381], [tx + 60, cy], [RX, cy], [RX, yC]], "BRN", { seg: 2, at: 0.25 }) + WD.dot(1340, cy) + WD.wire([[1340, cy], [1340, cy + 18]]) + WD.ground(1340, cy + 18, "");
+    s += WD.txt(RX + 8, cy - 4, "TRAN X2", "wdS") + WD.txt(1356, cy + 34, "GRN/YEL", "wdS");
+    rows.forEach(([t, y], i) => {
+      s += WD.tb(230, y, i + 1, "", "") + WD.txt(i === 0 ? 244 : 230, y - 12, t, "wdT", i === 0 ? "start" : "middle");
+    });
+    s += WD.txt(222, yC + 40, "TB", "wdT");
+    s += `<rect class="wdBox fld" x="50" y="${yR - 20}" width="100" height="${yC - yR + 40}"/>` + WD.lines(54, yC + 40, ["THERMOSTAT", "(FIELD SUPPLIED)"], "wdS");
+    rows.forEach(([t, y, c]) => {
+      s += WD.tb(140, y, t, "", "") + WD.wire([[147, y], [223, y]], c, { field: true });
+    });
+    return s;
+  },
+  /* a safety switch in a vertical wire (y1 top, y2 bottom); the sensing element hangs to the right */
+  swV(x, y1, y2, kind, mode2) {
+    return `<g transform="rotate(-90 ${x} ${y2})">${WD.swSym(x, x + (y2 - y1), y2, kind, mode2)}</g>`;
+  },
+  /* a contactor: poles on the line rails at xs, load side continuing to loadY (or per-pole ends) */
+  contactor(xs, name, ends, cols, at) {
+    let s = "";
+    xs.forEach((x, i) => {
+      const ry = [160, 200, 240][i];
+      s += WD.dot(x, ry) + WD.wire([[x, ry], [x, 296]]) + WD.pole(x, 310, "") + WD.wire([[x, 324], [x, ends[i]]], (cols || ["BLK", "YEL", "BLU"])[i], { at: at || 0.86 });
+      s += WD.txt(x - 4, 292, "L" + (i + 1), "wdS", "end") + WD.txt(x - 4, 336, "T" + (i + 1), "wdS", "end");
+    });
+    return s + WD.txt(xs[0] - 14, 314, name, "wdT", "end");
+  },
+  /* capacitor: one straight plate and one curved plate (the curved one is the identified/common side) */
+  capH(x, y) {
+    return `<path class="wdSym" d="M${x} ${y} H${x + 5} M${x + 5} ${y - 10} V${y + 10} M${x + 13} ${y - 10} Q${x + 8} ${y} ${x + 13} ${y + 10} M${x + 10.5} ${y} H${x + 16}" style="stroke-width:1.6"/>`;
+  },
+  capV(x, y) {
+    return `<path class="wdSym" d="M${x} ${y} V${y + 5} M${x - 10} ${y + 5} H${x + 10} M${x - 10} ${y + 13} Q${x} ${y + 8} ${x + 10} ${y + 13} M${x} ${y + 10.5} V${y + 16}" style="stroke-width:1.6"/>`;
+  },
+  /* dual run capacitor: two capacitors sharing the common terminal C, HERM on one side and FAN on the other */
+  dualCap(xh, xc, xf, y) {
+    const half = (a, b, k) => {
+      const m = (a + b) / 2;
+      return `<path class="wdSym" d="M${a + 9} ${y} H${m - 4 * k} M${m - 4 * k} ${y - 11} V${y + 11} M${m + 4 * k} ${y - 11} Q${m - k} ${y} ${m + 4 * k} ${y + 11} M${m + 1.5 * k} ${y} H${b - 9}" style="stroke-width:1.6"/>`;
+    };
+    return half(xh, xc, 1) + `<g transform="translate(${xc + xf} 0) scale(-1 1)">${half(xc, xf, 1).replace(/^/, "")}</g>` + WD.tc(xh, y, "H", 9) + WD.tc(xc, y, "C", 9) + WD.tc(xf, y, "F", 9) + `<rect class="wdBox" x="${xh - 16}" y="${y - 22}" width="${xf - xh + 32}" height="44" rx="10" style="stroke-dasharray:4 3"/>` + WD.txt(xh, y + 36, "HERM", "wdS", "middle") + WD.txt(xc, y + 36, "COM", "wdS", "middle") + WD.txt(xf, y + 36, "FAN", "wdS", "middle");
+  },
+  /* a box with terminals on its edges: t = [[label, x, y]] */
+  board(x, y, w, h, title, sub, t) {
+    let s = `<rect class="wdBox" x="${x}" y="${y}" width="${w}" height="${h}"/>` + WD.txt(x + w / 2, y + h / 2 - 4, title, "wdT", "middle") + (sub ? WD.lines(x + w / 2, y + h / 2 + 12, sub, "wdS").replace(/text-anchor="start"/g, 'text-anchor="middle"') : "");
+    t.forEach(([l, tx, ty]) => {
+      s += WD.tc(tx, ty, l, l.length > 2 ? 13 : 9);
+    });
+    return s;
+  },
+  paper() {
+    return '<g class="wd"><rect class="wdPaper" x="0" y="0" width="1500" height="1170"/>' + WD.txt(40, 46, "POWER SCHEMATIC", "wdH");
+  },
+  rung(y, a, b, col, opt) {
+    return WD.wire([[a, y], [b, y]], col, opt);
+  }
+});
+const WD_NOTE_FIELD = "NOTE - DASHED LINES ARE FIELD WIRING. A DOT IS A CONNECTION; LINES THAT CROSS WITH NO DOT ARE NOT JOINED.";
+const WD_NOTE_CU = "NOTE - TRANSFORMER SECONDARY X2 IS GROUNDED. USE COPPER CONDUCTORS ONLY. DISCONNECT ALL POWER BEFORE SERVICING.";
+function wdNotes(y, arr) {
+  let n = 0;
+  return WD.lines(40, y, arr.concat([WD_NOTE_FIELD, WD_NOTE_CU]).map((t) => /^NOTE -/.test(t) ? t.replace(/^NOTE -/, "NOTE " + ++n + " -") : t), "wdS", 15);
+}
+function buildWiring1() {
+  let s = WD.paper() + WD.supply("208/230", 1, [1140, 1200]);
+  s += WD.contactor([290, 330], "C", [441, 431]);
+  s += WD.motor(330, 492, 46, "COMP", "1-PH") + WD.tc(290, 450, "R", 9) + WD.tc(330, 440, "C", 9) + WD.tc(370, 450, "S", 9);
+  s += WD.dot(290, 370) + WD.wire([[290, 370], [690, 370]], "BLK", { at: 0.3 }) + WD.dot(515, 370) + WD.dot(690, 370);
+  s += WD.dot(330, 390) + WD.wire([[330, 390], [660, 390], [660, 444]], "YEL", { seg: 1, at: 0.75 });
+  s += WD.dualCap(445, 515, 585, 450);
+  s += WD.wire([[379, 450], [436, 450]], "BRN") + WD.wire([[515, 370], [515, 441]]) + WD.wire([[585, 441], [585, 405], [745, 405], [745, 453], [728, 453]], "BRN", { seg: 2 });
+  s += WD.motor(690, 500, 36, "OFM", "PSC") + WD.tc(660, 453, "C", 8) + WD.tc(690, 446, "R", 8) + WD.tc(720, 453, "S", 8) + WD.wire([[690, 370], [690, 438]]);
+  s += WD.dot(790, 160) + WD.wire([[790, 160], [790, 290]]) + WD.heater(790, 290, 340) + WD.wire([[790, 340], [790, 360], [815, 360], [815, 200]]) + WD.dot(815, 200) + WD.txt(778, 318, "CCH", "wdT", "end");
+  s += WD.dot(910, 160) + WD.wire([[910, 160], [910, 291]], "BLK", { at: 0.6 }) + WD.tc(910, 300, "COM", 11) + WD.tc(885, 345, "NO", 10) + WD.tc(935, 345, "NC", 10);
+  s += `<path class="wdSym" d="M912 311 L933 334" style="stroke-width:2"/>` + WD.txt(891, 304, "IFR", "wdT", "end");
+  s += WD.wire([[885, 355], [885, 385], [900, 385], [900, 431]], "BLK", { seg: 1, at: 0.5 }) + WD.dot(900, 405);
+  s += WD.motor(900, 492, 46, "IFM", "PSC") + WD.tc(855, 452, "C", 9) + WD.tc(900, 440, "R", 9) + WD.tc(945, 452, "S", 9);
+  s += WD.dot(855, 200) + WD.wire([[855, 200], [855, 443]], "YEL", { at: 0.75 });
+  s += WD.wire([[900, 405], [930, 405]]) + WD.capH(930, 405) + WD.wire([[946, 405], [975, 405], [975, 452], [954, 452]], "BRN", { seg: 2 }) + WD.txt(938, 386, "BCAP", "wdT", "middle");
+  s += WD.tran(1140, "230 V PRI");
+  s += WD.ctrlHead(1140, 566, [["R", 640, "RED"], ["Y", 720, "YEL"], ["G", 830, "GRN"], ["C", 900, "BLU"]], 688);
+  const RX = 1420, Y = 720;
+  s += WD.wire([[237, Y], [300, Y]], "YEL") + WD.plug(306, Y, "PL1-1") + WD.wire([[311, Y], [370, Y]], "YEL");
+  s += WD.sw(370, 430, Y, "press", "rise", "HPS") + WD.wire([[430, Y], [510, Y]], "BLU");
+  s += WD.sw(510, 570, Y, "press", "fall", "LPS") + WD.wire([[570, Y], [600, Y]]) + WD.plug(606, Y, "PL1-2") + WD.wire([[611, Y], [650, Y]], "BLU", { at: 0.4 });
+  s += WD.sw(650, 710, Y, "float", "rise", "COF") + WD.wire([[710, Y], [790, Y]], "BLU");
+  s += WD.sw(790, 850, Y, "temp", "fall", "FS") + WD.wire([[850, Y], [930, Y]], "BLU");
+  s += WD.sw(930, 990, Y, "dp", "rise", "PFS") + WD.wire([[990, Y], [1221, Y]], "VIO");
+  s += WD.coil(1250, Y, "C") + WD.wire([[1289, Y], [RX, Y]], "BRN") + WD.dot(RX, Y);
+  s += WD.wire([[237, 830], [1221, 830]], "GRN", { at: 0.45 }) + WD.coil(1250, 830, "IFR") + WD.wire([[1289, 830], [RX, 830]], "BRN") + WD.dot(RX, 830);
+  s += WD.wire([[237, 900], [RX, 900]], "BRN", { at: 0.45 });
+  s += wdNotes(980, [
+    "NOTE - HPS, LPS, COF, FS AND PFS ARE WIRED IN SERIES IN THE Y CIRCUIT AND SHOWN IN THEIR NORMAL RUNNING POSITION (CLOSED).",
+    "         ANY ONE THAT OPENS DROPS OUT THE COMPRESSOR CONTACTOR.",
+    "NOTE - DUAL RUN CAPACITOR: H = HERM (COMPRESSOR START WINDING), F = FAN (OFM START WINDING), C = COMMON (L1 SIDE).",
+    "NOTE - IFR IS A SINGLE-POLE DOUBLE-THROW RELAY. ONLY THE NORMALLY OPEN CONTACT IS USED; IT CLOSES WHEN G ENERGIZES THE COIL."
+  ]);
+  s += WD.legend(1010, 950, 450, [
+    ["BCAP", "BLOWER RUN CAPACITOR"],
+    ["C", "COMPRESSOR CONTACTOR (K1)"],
+    ["CAP", "DUAL RUN CAPACITOR"],
+    ["CCH", "CRANKCASE HEATER"],
+    ["COF", "CONDENSATE OVERFLOW SW"],
+    ["COMP", "COMPRESSOR"],
+    ["FS", "FREEZESTAT"],
+    ["FU", "24 VAC FUSE"],
+    ["HPS", "HIGH PRESSURE SWITCH"],
+    ["IFM", "INDOOR FAN MOTOR"],
+    ["IFR", "INDOOR FAN RELAY (K2)"],
+    ["LPS", "LOW PRESSURE SWITCH"],
+    ["OFM", "OUTDOOR FAN MOTOR"],
+    ["PFS", "FILTER PRESSURE SWITCH"],
+    ["PL", "PLUG"],
+    ["TB", "TERMINAL BOARD"],
+    ["TRAN", "TRANSFORMER"]
+  ]);
+  s += WD.txt(750, 1150, "Fig. 1 \u2014 Main Control Box Circuit \u2014 Packaged Unit, 208/230-1-60, Cooling", "wdCap", "middle");
+  return s + "</g>";
+}
+function buildWiring4() {
+  let s = WD.paper() + WD.supply("208/230", 3, [1180, 1240, 1095], 40, 400);
+  [[1, 200, 340, 400, 470], [2, 560, 700, 760, 830]].forEach(([n, x0, ox, capx, hx]) => {
+    s += WD.contactor([x0, x0 + 30, x0 + 60], "C" + n, [439, 431, 439]);
+    s += WD.motor(x0 + 30, 492, 40, "COMP" + n, "3-PH") + WD.tc(x0, 448, "T1", 9) + WD.tc(x0 + 30, 440, "T2", 9) + WD.tc(x0 + 60, 448, "T3", 9);
+    s += WD.dot(x0, 370) + WD.wire([[x0, 370], [capx, 370]], "BLK", { at: 0.4 }) + WD.dot(ox, 370) + WD.wire([[ox, 370], [ox, 441]]);
+    s += WD.dot(x0 + 30, 390) + WD.wire([[x0 + 30, 390], [ox - 25, 390], [ox - 25, 447]], "YEL", { seg: 1, at: 0.7 });
+    s += WD.motor(ox, 492, 28, "OFM" + n, "") + WD.tc(ox - 25, 455, "C", 8) + WD.tc(ox, 449, "R", 8) + WD.tc(ox + 25, 455, "S", 8);
+    s += WD.wire([[capx, 370], [capx, 395]]) + WD.capV(capx, 395) + WD.wire([[capx, 411], [capx, 455], [ox + 33, 455]], "BRN", { seg: 1 }) + WD.txt(capx + 14, 406, "CAP" + n, "wdT");
+    s += WD.dot(hx, 160) + WD.wire([[hx, 160], [hx, 290]]) + WD.heater(hx, 290, 340) + WD.wire([[hx, 340], [hx, 360], [hx + 25, 360], [hx + 25, 200]]) + WD.dot(hx + 25, 200) + WD.txt(hx - 12, 318, "CCH" + n, "wdT", "end");
+  });
+  s += WD.contactor([910, 940, 970], "IFC", [441, 431, 441]);
+  s += WD.motor(940, 492, 46, "IFM", "3-PH") + WD.tc(910, 450, "T1", 9) + WD.tc(940, 440, "T2", 9) + WD.tc(970, 450, "T3", 9);
+  s += `<rect class="wdBox" x="1005" y="300" width="110" height="64"/>` + WD.txt(1060, 352, "PMR", "wdT", "middle");
+  [[1025, 160, "L1"], [1060, 200, "L2"], [1095, 240, "L3"]].forEach(([x, ry, t]) => {
+    s += WD.dot(x, ry) + WD.wire([[x, ry], [x, 309]]) + WD.tc(x, 318, t, 9);
+  });
+  s += WD.tran(1180, "208 V PRI");
+  s += WD.ctrlHead(1180, 566, [["R", 640, "RED"], ["Y1", 700, "YEL"], ["Y2", 780, "ORN"], ["G", 870, "GRN"], ["C", 910, "BLU"]], 688);
+  const RX = 1420;
+  s += WD.board(760, 615, 120, 215, "LLC", ["LEAD/LAG", "CONTROL"], [["R", 760, 640], ["Y1", 760, 700], ["Y2", 760, 780], ["O1", 880, 670], ["O2", 880, 760], ["C", 880, 810]]);
+  s += WD.wire([[237, 640], [751, 640]], "RED", { at: 0.6 });
+  s += WD.wire([[237, 700], [300, 700]], "YEL") + WD.sw(300, 360, 700, "float", "rise", "COF") + WD.wire([[360, 700], [420, 700]], "BLU");
+  s += WD.sw(420, 480, 700, "dp", "rise", "PFS") + WD.wire([[480, 700], [561, 700]], "BLU") + WD.noContact(570, 630, 700, "11", "14", "PMR") + WD.wire([[639, 700], [751, 700]], "VIO");
+  s += WD.wire([[237, 780], [751, 780]], "ORN", { at: 0.5 });
+  [[1, 670], [2, 760]].forEach(([n, y]) => {
+    s += WD.wire([[889, y], [920, y]]) + WD.sw(920, 980, y, "press", "rise", "HPS" + n) + WD.wire([[980, y], [1010, y]]);
+    s += WD.sw(1010, 1070, y, "press", "fall", "LPS" + n) + WD.wire([[1070, y], [1100, y]]) + WD.sw(1100, 1160, y, "temp", "fall", "FS" + n) + WD.wire([[1160, y], [1221, y]]);
+    s += WD.coil(1250, y, "C" + n) + WD.wire([[1289, y], [RX, y]], "BRN") + WD.dot(RX, y);
+  });
+  s += WD.wire([[891, 810], [RX, 810]], "BRN", { at: 0.5 }) + WD.dot(RX, 810);
+  s += WD.wire([[237, 870], [1221, 870]], "GRN", { at: 0.45 }) + WD.coil(1250, 870, "IFC") + WD.wire([[1289, 870], [RX, 870]], "BRN") + WD.dot(RX, 870);
+  s += WD.wire([[237, 910], [RX, 910]], "BRN", { at: 0.45 });
+  s += wdNotes(980, [
+    "NOTE - COF, PFS AND THE PMR CONTACT (11-14) ARE IN SERIES IN Y1 AHEAD OF THE LEAD/LAG BOARD. EACH CIRCUIT HAS ITS OWN HPS, LPS AND FS",
+    "         IN SERIES WITH ITS CONTACTOR COIL. ALL SAFETIES ARE SHOWN IN THEIR NORMAL RUNNING POSITION (CLOSED).",
+    "NOTE - Y1 STARTS THE LEAD CIRCUIT. Y2 STARTS THE LAG CIRCUIT AFTER A TIME DELAY. THE BOARD SWAPS LEAD AND LAG EACH CYCLE."
+  ]);
+  s += WD.legend(1010, 950, 450, [
+    ["C1/C2", "COMPRESSOR CONTACTORS"],
+    ["CAP", "FAN RUN CAPACITOR"],
+    ["CCH", "CRANKCASE HEATER"],
+    ["COF", "CONDENSATE OVERFLOW SW"],
+    ["COMP", "COMPRESSOR"],
+    ["FS", "FREEZESTAT"],
+    ["FU", "24 VAC FUSE"],
+    ["HPS", "HIGH PRESSURE SWITCH"],
+    ["IFC", "INDOOR FAN CONTACTOR"],
+    ["IFM", "INDOOR FAN MOTOR"],
+    ["LLC", "LEAD/LAG CONTROL BOARD"],
+    ["LPS", "LOW PRESSURE SWITCH"],
+    ["OFM", "OUTDOOR FAN MOTOR"],
+    ["PFS", "FILTER PRESSURE SWITCH"],
+    ["PMR", "PHASE MONITOR RELAY"],
+    ["TB", "TERMINAL BOARD"],
+    ["TRAN", "TRANSFORMER"]
+  ]);
+  s += WD.txt(750, 1150, "Fig. 1 \u2014 Main Control Box Circuit \u2014 Packaged Unit, Two Circuits, 208/230-3-60, Cooling", "wdCap", "middle");
+  return s + "</g>";
+}
+function buildWiringG() {
+  let s = WD.paper() + WD.supply("208/230", 3, [1140, 1200, 380]);
+  s += WD.contactor([300, 340, 380], "IFC", [441, 431, 441]);
+  s += WD.motor(340, 492, 46, "IFM", "3-PH") + WD.tc(300, 450, "T1", 9) + WD.tc(340, 440, "T2", 9) + WD.tc(380, 450, "T3", 9);
+  s += WD.dot(700, 160) + WD.wire([[700, 160], [700, 624]], "BLK", { at: 0.62 });
+  s += WD.dot(780, 200) + WD.wire([[780, 200], [780, 395]], "YEL", { at: 0.5 }) + WD.tc(780, 404, "2", 9) + WD.motor(780, 450, 32, "IDM", "INDUCER") + WD.tc(780, 496, "1", 9) + WD.wire([[780, 505], [780, 624]], "BLK", { at: 0.45 });
+  s += WD.tran(1140, "208 V PRI");
+  s += WD.ctrlHead(1140, 566, [["R", 660, "RED"], ["W", 720, "WHT"], ["G", 780, "GRN"], ["C", 990, "BLU"]], 470);
+  const RX = 1420;
+  s += WD.board(640, 635, 300, 290, "IGC", ["INTEGRATED GAS", "CONTROL BOARD", "", "LED STATUS CODES"], [
+    ["L1", 700, 635],
+    ["IDM", 780, 635],
+    ["R", 640, 660],
+    ["W", 640, 720],
+    ["G", 640, 780],
+    ["FAN", 940, 665],
+    ["MV", 940, 715],
+    ["PS", 940, 765],
+    ["PSR", 940, 815],
+    ["LS", 940, 850],
+    ["RS", 940, 900],
+    ["C", 680, 925],
+    ["SPK", 800, 925],
+    ["FSR", 880, 925]
+  ]);
+  s += WD.wire([[237, 660], [631, 660]], "RED", { at: 0.6 }) + WD.wire([[237, 720], [631, 720]], "WHT", { at: 0.6 }) + WD.wire([[237, 780], [631, 780]], "GRN", { at: 0.6 });
+  s += WD.wire([[949, 665], [1221, 665]], "ORN") + WD.coil(1250, 665, "IFC") + WD.wire([[1289, 665], [RX, 665]], "BRN") + WD.dot(RX, 665);
+  s += WD.wire([[949, 715], [1221, 715]], "BLU") + WD.coil(1250, 715, "GV", "MV", "C") + WD.wire([[1289, 715], [RX, 715]], "BRN") + WD.dot(RX, 715);
+  s += WD.wire([[951, 765], [1010, 765]], "ORN") + WD.sw(1010, 1070, 765, "press", "fall", "PS") + WD.wire([[1070, 765], [1110, 765], [1110, 815], [951, 815]], "ORN", { seg: 3 });
+  s += WD.wire([[951, 850], [1010, 850]], "RED") + WD.sw(1010, 1070, 850, "temp", "rise", "LS") + WD.wire([[1070, 850], [1110, 850]], "RED");
+  s += WD.sw(1110, 1170, 850, "temp", "rise", "ROS") + WD.wire([[1170, 850], [1200, 850], [1200, 900], [951, 900]], "RED", { seg: 3 });
+  s += WD.wire([[800, 936], [800, 952]]) + `<path class="wdSym" d="M795 952 L800 960 L805 952"/>` + WD.ground(800, 964, "") + WD.txt(788, 958, "SPARK", "wdS", "end");
+  s += WD.wire([[880, 934], [880, 960], [910, 960]]) + WD.txt(916, 964, "FLAME ROD", "wdS");
+  s += WD.wire([[680, 934], [680, 990]]) + WD.dot(680, 990) + WD.wire([[237, 990], [RX, 990]], "BRN", { at: 0.3 });
+  s += wdNotes(1060, [
+    "NOTE - ON A CALL FOR HEAT (W) THE IGC RUNS THE INDUCER, PROVES DRAFT THROUGH PS, SPARKS AND OPENS THE GAS VALVE (MV), PROVES FLAME",
+    "         ON THE FLAME ROD, THEN BRINGS ON THE BLOWER (FAN) AFTER A DELAY. SAFETIES ARE SHOWN IN THEIR NORMAL RUNNING POSITION.",
+    "NOTE - LS (AUTO RESET) AND ROS (MANUAL RESET) ARE IN SERIES BETWEEN BOARD TERMINALS LS AND RS."
+  ]);
+  s += WD.legend(1010, 1006, 450, [
+    ["FU", "24 VAC FUSE"],
+    ["GV", "GAS VALVE"],
+    ["IDM", "INDUCER DRAFT MOTOR"],
+    ["IFC", "INDOOR FAN CONTACTOR (K2)"],
+    ["IFM", "INDOOR FAN MOTOR"],
+    ["IGC", "INTEGRATED GAS CONTROL"],
+    ["LS", "HIGH LIMIT SWITCH"],
+    ["PS", "INDUCER PRESSURE SWITCH"],
+    ["ROS", "FLAME ROLLOUT SWITCH"],
+    ["SPK", "SPARK IGNITER"],
+    ["FSR", "FLAME SENSE ROD"],
+    ["TB", "TERMINAL BOARD"],
+    ["TRAN", "TRANSFORMER"]
+  ]);
+  s += WD.txt(750, 1150, "Fig. 1 \u2014 Main Control Box Circuit \u2014 Packaged Unit, 208/230-3-60, Gas Heat", "wdCap", "middle");
+  return s + "</g>";
+}
+function buildWiringE() {
+  let s = WD.paper() + WD.supply("208/230", 3, [1140, 1200, 800], 40, 400);
+  s += WD.contactor([220, 250, 280], "IFC", [441, 431, 441]);
+  s += WD.motor(250, 492, 46, "IFM", "3-PH") + WD.tc(220, 450, "T1", 9) + WD.tc(250, 440, "T2", 9) + WD.tc(280, 450, "T3", 9);
+  const res = (x1, y1, x2, y2) => {
+    const L = Math.hypot(x2 - x1, y2 - y1), a = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI, z0 = L * 0.22, z1 = L * 0.78, n = 8, w = (z1 - z0) / n;
+    let d = `M0 0 H${z0}`;
+    for (let k = 0; k < n; k++) d += ` L${z0 + w * (k + 0.5)} ${k % 2 ? 7 : -7}`;
+    d += ` L${z1} 0 H${L}`;
+    return `<path class="wdSym" transform="translate(${x1} ${y1}) rotate(${a})" d="${d}"/>`;
+  };
+  [[1, 420, 1], [2, 740, 4]].forEach(([n, x0, e0]) => {
+    const A2 = [x0, 520], B = [x0 + 90, 395], C = [x0 + 180, 520];
+    s += WD.contactor([x0, x0 + 30, x0 + 60], "HC" + n, [A2[1], 365, 345], ["BLK", "", ""], 0.55);
+    s += WD.wire([[x0 + 30, 365], [B[0], 365], [B[1] === 395 ? B[0] : B[0], B[1]]], "YEL", { seg: 1, at: 0.45 }) + WD.wire([[x0 + 60, 345], [C[0], 345], [C[0], C[1]]], "BLU", { seg: 2, at: 0.45 });
+    s += `<rect class="wdBox fld" x="${x0 - 22}" y="378" width="${224}" height="170" style="stroke-dasharray:2 3"/>`;
+    s += res(A2[0], A2[1], B[0], B[1]) + res(B[0], B[1], C[0], C[1]) + res(C[0], C[1], A2[0], A2[1]);
+    s += WD.dot(A2[0], A2[1]) + WD.dot(B[0], B[1]) + WD.dot(C[0], C[1]);
+    s += WD.txt(A2[0] + 30, 450, "E" + e0, "wdT", "end") + WD.txt(C[0] - 30, 450, "E" + (e0 + 1), "wdT") + WD.txt(B[0], 540, "E" + (e0 + 2), "wdT", "middle");
+    s += WD.txt(A2[0] - 8, 535, "T1", "wdS", "end") + WD.txt(B[0] + 10, 392, "T2", "wdS") + WD.txt(C[0] + 8, 535, "T3", "wdS");
+    s += WD.lines(x0 - 20, 566, ["HTR" + n + " \xB7 STAGE " + n + " \xB7 10 KW", "LS" + n + " / SL" + n + " MOUNTED ON HEATER (24 VAC, SEE CONTROL)"], "wdS", 12);
+  });
+  s += WD.tran(1140, "208 V PRI");
+  s += WD.ctrlHead(1140, 626, [["R", 690, "RED"], ["G", 745, "GRN"], ["W1", 815, "WHT"], ["W2", 895, "BRN"], ["C", 950, "BLU"]], 688);
+  const RX = 1420;
+  s += WD.wire([[237, 745], [1221, 745]], "GRN", { at: 0.45 }) + WD.coil(1250, 745, "IFC") + WD.wire([[1289, 745], [RX, 745]], "BRN") + WD.dot(RX, 745);
+  [[815, "WHT", "HC1", 1, "PL2"], [895, "ORN", "HC2", 2, "PL3"]].forEach(([y, c, n, l0, pl]) => {
+    s += WD.wire([[237, y], [400, y]], c) + WD.plug(406, y, pl + "-1") + WD.wire([[411, y], [520, y]], "BLK");
+    s += WD.sw(520, 580, y, "temp", "rise", "LS" + l0) + WD.wire([[580, y], [720, y]], "BLK") + WD.sw(720, 780, y, "temp", "rise", "SL" + l0) + WD.txt(810, y + 22, "MAN. RESET", "wdS") + WD.wire([[780, y], [1e3, y]], "BLK");
+    s += WD.plug(1006, y, pl + "-2") + WD.wire([[1011, y], [1221, y]], "VIO") + WD.coil(1250, y, n) + WD.wire([[1289, y], [RX, y]], "BRN") + WD.dot(RX, y);
+  });
+  s += WD.wire([[237, 950], [RX, 950]], "BRN", { at: 0.45 });
+  s += wdNotes(1020, [
+    "NOTE - W1 PULLS IN HC1 (ELEMENTS E1-E3) THROUGH LS1 AND SL1. W2 PULLS IN HC2 (E4-E6) THROUGH LS2 AND SL2. G COMES ON WITH EVERY HEAT CALL.",
+    "NOTE - LS = PRIMARY LIMIT, AUTO RESET. SL = SECONDARY LIMIT, MANUAL RESET (BACKUP). SHOWN CLOSED. EITHER ONE OPEN DROPS OUT ITS STAGE.",
+    "NOTE - ELEMENTS ARE 3.3 KW EACH, CONNECTED IN DELTA."
+  ]);
+  s += WD.legend(1010, 1e3, 450, [["E1-6", "HEATER ELEMENTS"], ["FU", "24 VAC FUSE"], ["HC1/2", "HEATER CONTACTORS"], ["IFC", "INDOOR FAN CONTACTOR (K2)"], ["IFM", "INDOOR FAN MOTOR"], ["LS1/2", "PRIMARY LIMITS (AUTO)"], ["PL", "PLUG"], ["SL1/2", "SECONDARY LIMITS (MANUAL)"], ["TB", "TERMINAL BOARD"], ["TRAN", "TRANSFORMER"]]);
+  s += WD.txt(750, 1150, "Fig. 1 \u2014 Main Control Box Circuit \u2014 Packaged Unit, 208/230-3-60, Electric Heat", "wdCap", "middle");
+  return s + "</g>";
 }
 const PT410 = [[-20, 12.5], [0, 48.5], [10, 62.5], [20, 78.5], [30, 96.5], [40, 118], [50, 142], [60, 170], [70, 201], [80, 236], [90, 274], [100, 317], [110, 365], [120, 418], [130, 475], [140, 538], [150, 606]];
 function satP(t) {
@@ -7035,7 +7607,7 @@ const LEVELSE = [
     rank: "Journeyman",
     site: SITE_E,
     tamb: 22,
-    faults: ["lim_bad_5"],
+    faults: ["sec_trip_2"],
     par: 8,
     guide: false,
     hints: [],
@@ -8272,9 +8844,9 @@ const INSTR_FAULTS_E = [
   ["Power and control", [["pfuse_L1", "Disconnect fuse blown, leg L1"], ["pfuse_L2", "Disconnect fuse blown, leg L2"], ["pfuse_L3", "Disconnect fuse blown, leg L3"], ["fuse_open", "Low-voltage fuse blown"], ["w_wire", "Broken thermostat W1 wire"]]],
   ["Heat contactors", [["hc1_coil", "HC1 coil open (no stage 1)"], ["hc2_coil", "HC2 coil open (no stage 2)"], ["hc1_pole", "HC1 pole 3 burnt open"]]],
   ["Heater elements", [1, 2, 3, 4, 5, 6].map((n) => ["elem_open_" + n, "Element E" + n + " open (stage " + (n < 4 ? 1 : 2) + ")"])],
-  ["Element limits", [1, 2, 3, 4, 5, 6].map((n) => ["lim_bad_" + n, "Limit LS" + n + " failed open (stage " + (n < 4 ? 1 : 2) + ")"])],
+  ["Heater limits (24 V)", [1, 2].map((n) => ["lim_bad_" + n, "Primary limit LS" + n + " failed open (stage " + n + ")"]).concat([1, 2].map((n) => ["sec_trip_" + n, "Secondary limit SL" + n + " tripped, needs a reset (stage " + n + ")"]), [1, 2].map((n) => ["sec_bad_" + n, "Secondary limit SL" + n + " failed open (stage " + n + ")"]))],
   ["Blower and airflow", [["relay_coil_open", "Blower contactor coil open (limits trip)"], ["belt_broken", "Blower belt broken"], ["belt_loose", "Blower belt worn and slipping (replace)"], ["belt_slack", "Blower belt good but loose (adjust)"], ["r_dirty_filter", "Dirty filters"]]],
-  ["Limits jumped out by a previous tech", [1, 2, 3, 4, 5, 6].map((n) => ["jmp_ls_" + n, "Jumper across limit LS" + n])]
+  ["Limits jumped out by a previous tech", [1, 2].map((n) => ["jmp_ls_" + n, "Jumper across primary limit LS" + n])]
 ];
 const INSTR_FAULTS_460 = INSTR_FAULTS.concat([["460 V problems", [
   ["xfmr_tap", "Replacement transformer wired on the 230 V tap (48 V out, blows the 3 A fuse)", ""],
@@ -8913,7 +9485,6 @@ function trainerSet(on, name, opt) {
   TRAINER.account = on && !!opt.account;
   TRAINER.admin = on && !!opt.admin;
   TRAINER.email = on ? opt.email || "" : "";
-  heatUnlocked = on;
   CLS.unlocked = on;
   if (on) recSignBy = name;
   document.querySelectorAll("#setSel option").forEach((o) => {
@@ -9523,11 +10094,14 @@ const CUST_A = {
   hc1_coil: { pattern: "The fan blows, but the air is barely warm." },
   hc2_coil: { pattern: "It keeps up on mild days. On cold mornings it never catches up." },
   hc1_pole: { other: "An electrician was here and said one of the wires to the unit runs lighter than the others." },
-  jmp_ls_1: { worked: 'Another company was out in the fall. They said they "fixed it."' }
+  jmp_ls_1: { worked: 'Another company was out in the fall. They said they "fixed it."' },
+  sec_trip_1: { other: "The filters were so plugged last week the maintenance guy changed them himself. It has not been right since." },
+  sec_trip_2: { other: "The filters were so plugged last week the maintenance guy changed them himself. It has not been right since." }
 };
-for (let n = 1; n <= 6; n++) {
-  CUST_A["elem_open_" + n] = CUST_A["elem_open_" + n] || { pattern: "It runs nonstop and it is not as warm as last winter." };
-  CUST_A["lim_bad_" + n] = CUST_A["lim_bad_" + n] || { pattern: "It is warm, just not like last winter. It never shuts off." };
+for (let n = 1; n <= 6; n++) CUST_A["elem_open_" + n] = CUST_A["elem_open_" + n] || { pattern: "It runs nonstop and it is not as warm as last winter." };
+for (let n = 1; n <= 2; n++) {
+  CUST_A["lim_bad_" + n] = { pattern: n === 1 ? "The fan blows, but the air is barely warm." : "It is warm, just not like last winter. It never shuts off." };
+  CUST_A["sec_bad_" + n] = CUST_A["lim_bad_" + n];
   if (n > 1) CUST_A["jmp_ls_" + n] = CUST_A.jmp_ls_1;
 }
 let CUST = { asked: [] };
@@ -9694,7 +10268,7 @@ const RC_POOLS = {
   "4": RC_POOL_3 + " xfmr_tap:2:2:dead fan_208:2:2:cycle cch_208:1:2:clatter sup_L3:2:2:hum sup_imbal:1:3:nocool",
   "L": "fuse_open:4:1:dead pfuse_L1:2:1:dead belt_loose:4:1:squeal cap_fan_weak1:4:1:weak cap_fan_weak2:4:1:weak coil_open1:3:1:weak coil_open2:3:1:weak r_dirty_filter:5:1:weak ll_board:2:2:nocool ll_out1:2:2:weak ll_out2:2:2:weak y2_wire:2:2:weak pole_burnt1:2:2:weak pole_burnt2:2:2:weak fan_motor_open1:2:2:weak fan_motor_open2:2:2:weak hps_open1:2:2:weak hps_open2:2:2:weak lps_open1:1:2:weak lps_open2:1:2:weak frz_bad1:1:2:weak frz_bad2:1:2:weak comp_open1:1:2:weak comp_open2:1:2:weak pm_open:2:2:nocool phase_reversed:1:2:noair relay_coil_open:2:2:noair blower_grounded:1:2:trip belt_broken:2:2:noair belt_slack:2:2:squeal float_bad:2:2:nocool pfs_bad:1:2:nocool cch1_open:1:2:clatter cch2_open:1:2:clatter npf_stat:1:3:off",
   "G": "gas_off:4:1:hcold w_wire:3:1:hnone fs_dirty:5:1:hcycle belt_loose:4:1:hsqueal fuse_open:3:1:hdead r_dirty_filter:5:1:hcycle ind_open:3:2:hcold ps_hose:3:2:hcold ps_bad:2:2:hcold flue_blocked:2:2:hcold igniter_bad:4:2:hcold hx_sooted:1:2:hcycle gas_low:2:2:hweak gv_bad:2:2:hcold rollout_bad:2:2:hcold limit_bad:2:2:hcold igc_bad:1:2:hnone relay_coil_open:2:2:hnoair belt_broken:2:2:hnoair belt_slack:2:2:hsqueal pfuse_L1:1:2:hdead jmp_lim:1:3:checkup jmp_ro:1:3:checkup jmp_ps:1:3:checkup npf_stat:1:3:hoff",
-  "E": "fuse_open:4:1:hdead w_wire:3:1:hnone hc2_coil:3:1:hweak elem_open_#:5:1:hweak relay_coil_open:3:1:hnoair belt_loose:3:1:hsqueal lim_bad_#:4:2:hweak hc1_coil:2:2:hcold hc1_pole:2:2:hweak pfuse_L3:2:2:hweak belt_broken:2:2:hnoair belt_slack:2:2:hsqueal r_dirty_filter:3:2:hweak jmp_ls_#:1:3:checkup npf_stat:1:3:hoff"
+  "E": "fuse_open:4:1:hdead w_wire:3:1:hnone hc2_coil:3:1:hweak elem_open_#:5:1:hweak relay_coil_open:3:1:hnoair belt_loose:3:1:hsqueal lim_bad_$:4:2:hweak sec_trip_$:3:2:hweak sec_bad_$:2:3:hweak hc1_coil:2:2:hcold hc1_pole:2:2:hweak pfuse_L3:2:2:hweak belt_broken:2:2:hnoair belt_slack:2:2:hsqueal r_dirty_filter:3:2:hweak jmp_ls_$:1:3:checkup npf_stat:1:3:hoff"
 };
 const RC_LEAKS = ["r_leak_core", "r_leak_core_hi", "r_leak_coil", "r_leak_cond", "r_leak_braze", "r_leak_flare", "r_leak_valve"];
 const RC_REASON = {
@@ -9859,7 +10433,7 @@ function rcRoll(r, u, d) {
     if (/_[1-6]$/.test(a) && /_[1-6]$/.test(b) && a.slice(-1) === b.slice(-1)) return true;
     return RC_CONFLICT.some((g) => g.includes(fa) && g.includes(fb));
   };
-  const fill = (f) => f.replace("#", 1 + Math.floor(r() * 6)).replace(/^r_leak$/, () => rcPick(r, RC_LEAKS));
+  const fill = (f) => f.replace("#", 1 + Math.floor(r() * 6)).replace("$", 1 + Math.floor(r() * 2)).replace(/^r_leak$/, () => rcPick(r, RC_LEAKS));
   let picked = [];
   if (d === "A") picked = [rcWeighted(r, pool.filter((x) => x.tier === 1))];
   else if (d === "J") picked = [rcWeighted(r, pool.filter((x) => x.tier <= 2 && !/^npf/.test(x.f)))];
@@ -10072,9 +10646,9 @@ function clsLockSheet(after) {
   };
   setTimeout(() => $("clsPw").focus(), 30);
 }
-let heatUnlocked = false;
+let heatUnlocked = true;
 const HEAT_SETS = ["G", "E"];
-const heatOK = () => heatUnlocked || CLS.unlocked;
+const heatOK = () => true;
 function heatLockSheet(after, cancel) {
   const wasActive = active;
   active = false;
@@ -10330,14 +10904,14 @@ function seqSteps() {
       t: "Stage 1 heat call",
       st: { call: true },
       hi: ["T_W1", "H1_A", "H1_B", "HC1_T1", "HC1_T2", "HC1_T3"],
-      txt: "The thermostat closes R to W1 and R to G. 24 V energizes the HC1 heat contactor and the blower contactor. HC1 puts line voltage on the first bank of elements, through their high limits.",
-      rd: [V("T_W1", "T_C", "W1 to C"), V("H1_A", "H1_B", "HC1 coil"), A("e1", "Element E1"), A("e2", "Element E2"), A("e3", "Element E3"), V("LS1_A", "LS1_B", "Across limit LS1 (closed = 0 V)")]
+      txt: "The thermostat closes R to W1 and R to G. W1 runs through the stage-1 primary limit LS1 and secondary limit SL1 to the HC1 heat contactor coil, and G pulls in the blower contactor. HC1 puts line voltage on the first bank of elements.",
+      rd: [V("T_W1", "T_C", "W1 to C"), V("H1_A", "H1_B", "HC1 coil"), A("e1", "Element E1"), A("e2", "Element E2"), A("e3", "Element E3"), V("LS1_A", "LS1_B", "Across primary limit LS1 (closed = 0 V)"), V("SL1_A", "SL1_B", "Across secondary limit SL1 (closed = 0 V)")]
     },
     {
       t: "Blower",
       st: { call: true },
       hi: ["FRLY_A", "FRLY_B", "BLW_1", "BLW_2", "BLW_3"],
-      txt: "The blower must run whenever the elements are on. Without airflow the elements overheat and the high limits open.",
+      txt: "The blower must run whenever the elements are on. Without airflow the elements overheat and the primary limit opens, which drops out its whole stage. If the primary is jumped or stuck, the manual-reset secondary opens and stays open.",
       rd: [V("FRLY_A", "FRLY_B", "Blower contactor coil"), A("blower1", "Blower"), ST(() => Math.round(Sim.status().rise || 0) + "\xB0F", "Temperature rise")]
     },
     {
@@ -14133,7 +14707,7 @@ const guideE = [
   ["One element, measured alone", "13 \u03A9"],
   ["One element measured in the circuit (power off)", "about 8.7 \u03A9 (the other two are in parallel)"],
   ["Closed limit, contact or fuse", "0 V across it"],
-  ["Open limit with the contactor closed", "208 V across it"],
+  ["Open limit on a heat call", "24 V across it (its stage drops out)"],
   ["Temperature rise, both stages", "about 31\xB0F"]
 ];
 const clampG = [
@@ -14177,6 +14751,7 @@ const SETS = {
     clamp: clamp1,
     build: () => buildUnit(),
     schem: () => buildSchematic(),
+    wd: () => buildWiring1(),
     specs: () => buildSpecs() + buildSpecsSafety() + buildSpecsRef(),
     status: status1,
     vb: "-40 0 1140 1000",
@@ -14201,6 +14776,7 @@ const SETS = {
     clamp: clamp3,
     build: () => buildUnit3(),
     schem: () => buildSchematic3(),
+    wd: () => buildWiring3(),
     specs: () => buildSpecs3() + buildSpecsSafety() + buildSpecsRef(),
     status: status3,
     vb: "0 0 1120 1285",
@@ -14225,6 +14801,7 @@ SETS["M"] = {
   legend: legendM,
   clamp: clampM,
   build: () => buildUnit4(),
+  wd: () => buildWiring4(),
   schem: () => buildSchematic4(),
   specs: () => buildSpecs4() + buildSpecsSafety() + buildSpecsRef(),
   status: status4,
@@ -14285,6 +14862,7 @@ SETS["G"] = {
   legend: legend3,
   clamp: clampG,
   build: () => buildUnitG(),
+  wd: () => buildWiringG(),
   schem: () => buildSchematicG(),
   specs: () => buildSpecsG(),
   status: statusH,
@@ -14310,6 +14888,7 @@ SETS["E"] = {
   legend: legend3,
   clamp: clampE,
   build: () => buildUnitE(),
+  wd: () => buildWiringE(),
   schem: () => buildSchematicE(),
   specs: () => buildSpecsE(),
   status: statusH,
@@ -14530,6 +15109,21 @@ function sheet(html) {
   $("modal").hidden = false;
   const b = $("sheet").querySelector("button");
   if (b) b.focus();
+}
+function renderSchem() {
+  let m = "ladder";
+  try {
+    m = localStorage.getItem("put_sch") || "ladder";
+  } catch (e) {
+  }
+  const wd = m === "wd" && !!CUR.wd;
+  $("schemSvg").innerHTML = wd ? CUR.wd() : CUR.schem();
+  $("schemSvg").setAttribute("viewBox", wd ? "0 0 1500 1170" : CUR.sb);
+  $("schemSvg").classList.toggle("wdOn", wd);
+  $("schMode").hidden = !CUR.wd;
+  $("seqBtn").hidden = wd;
+  if ($("legendS")) $("legendS").hidden = wd;
+  $("schMode").querySelectorAll("[data-sm]").forEach((b) => b.classList.toggle("on", b.dataset.sm === (wd ? "wd" : "ladder")));
 }
 function startLevel(i) {
   li = i;
@@ -14845,8 +15439,7 @@ function applySet(key) {
     rebuildPic();
     resetPic();
   }
-  $("schemSvg").innerHTML = CUR.schem();
-  $("schemSvg").setAttribute("viewBox", CUR.sb);
+  renderSchem();
   $("specBody").innerHTML = CUR.specs();
   $("partSel").innerHTML = buildPartOptions();
   $("clampSel").innerHTML = CUR.clamp.map((g) => `<optgroup label="${esc(g[0])}">` + g[1].map((c) => `<option value="${c[0]}">${esc(c[1])}</option>`).join("") + "</optgroup>").join("");
@@ -14879,6 +15472,16 @@ function init() {
   $("seqBtn").onclick = () => {
     if (!SEQ.on) seqStart();
   };
+  $("schMode").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-sm]");
+    if (!b) return;
+    try {
+      localStorage.setItem("put_sch", b.dataset.sm);
+    } catch (x) {
+    }
+    if (SEQ.on) seqStop();
+    renderSchem();
+  });
   clsInit();
   rigInit();
   $("whoBtn").onclick = () => whoSheet();
@@ -14993,7 +15596,7 @@ function init() {
   });
   let saved = "S";
   try {
-    saved = ["1", "3", "4", "R", "M", "X", "S"].includes(localStorage.getItem("put_set")) ? localStorage.getItem("put_set") : "S";
+    saved = ["1", "3", "4", "R", "M", "G", "E", "X", "S"].includes(localStorage.getItem("put_set")) ? localStorage.getItem("put_set") : "S";
   } catch (e) {
   }
   applySet(saved);
