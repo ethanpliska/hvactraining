@@ -484,6 +484,15 @@ html.board .sheet.big .mgFit{max-width:calc((98 * var(--VH) - 210px) * var(--ar)
 .tmBtns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.tmBtns .btn{padding:6px 10px;font-size:11px}
 html.phone .tmRow{grid-template-columns:1fr auto}html.phone .tmBtns{grid-column:1/-1;justify-content:flex-start}
 
+/* sign-in screen over the whole game */
+#gate{position:fixed;top:0;right:0;bottom:0;left:0;z-index:30;background:var(--bg);overflow:auto}
+#gate[hidden]{display:none}
+.gateWrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:20px 12px;box-sizing:border-box}
+#gateCard{width:min(460px,calc(94 * var(--VW)))}
+#gateCard .chk{font-size:13px;margin:6px 0 4px}
+.rpList{display:grid;gap:6px;margin:4px 0 12px}.rpList .btn{display:flex;flex-direction:column;align-items:flex-start;text-align:left;padding:10px 14px;gap:2px}
+.rpList .btn span{font:400 12.5px inherit;letter-spacing:0;text-transform:none;color:var(--dim)}
+
 </style>
 <script>
 /* plain old JavaScript on purpose: if the game script cannot run on this browser, say so on screen instead of showing a blank page */
@@ -506,7 +515,7 @@ window.onerror = function (msg, src, line) {
   <button class="btn" id="rcBtn" type="button" hidden>New call</button>
   <button class="btn" id="instrBtn" type="button" hidden title="Change the job (password needed)">Instructor setup</button>
   <button class="btn" id="clsBtn" type="button" title="Instructor controls for running a job in front of the class (password needed)">Class controls</button>
-  <button class="btn" id="whoBtn" type="button" title="The name your instructor sees on your results">Set your name</button>
+  <button class="btn" id="whoBtn" type="button" title="Your account: training record, sign out, and trainer tools">Set your name</button>
   <button class="btn" id="recBtn" type="button" title="Your skills and the jobs you have done">Training record</button>
   <button class="btn" id="viewBtn" type="button" title="Switch between the desktop, phone and smartboard layouts">View: Desktop</button>
   <span id="bzBox"><button class="btn" id="bzDn" type="button" title="Make everything smaller">Size −</button><button class="btn" id="bzUp" type="button" title="Make everything bigger">Size +</button></span>
@@ -619,6 +628,7 @@ window.onerror = function (msg, src, line) {
     <div class="card" id="guide"></div>
   </aside>
 </main>
+<div id="gate" hidden><div class="gateWrap"><div class="sheet" id="gateCard"></div></div></div>
 <div id="modal" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
 <script>
 const PARTS1 = {
@@ -8115,7 +8125,7 @@ function tsInit() {
   };
 }
 const PUT_SB = { url: "https://peeqjgidobcrqbtjntzs.supabase.co", key: "sb_publishable_XYBh2BSWr1kKo45EO-zkMQ_0nM2NHOr" };
-const INSTR_SALT = "7221aff75546a04b", INSTR_HASH = "76826136f219982f3af233bbca73561e9e218296dc76ef37c625e4ac2e7c4759";
+const INSTR_SALT = "6d1a8d966e3b04dc", INSTR_HASH = "1551ea3bdb3fd21276cae6abb53bd9fcc5f9e41e2da52d0f9ca82435a764713f";
 function sha256hex(str) {
   const K = [1116352408, 1899447441, 3049323471, 3921009573, 961987163, 1508970993, 2453635748, 2870763221, 3624381080, 310598401, 607225278, 1426881987, 1925078388, 2162078206, 2614888103, 3248222580, 3835390401, 4022224774, 264347078, 604807628, 770255983, 1249150122, 1555081692, 1996064986, 2554220882, 2821834349, 2952996808, 3210313671, 3336571891, 3584528711, 113926993, 338241895, 666307205, 773529912, 1294757372, 1396182291, 1695183700, 1986661051, 2177026350, 2456956037, 2730485921, 2820302411, 3259730800, 3345764771, 3516065817, 3600352804, 4094571909, 275423344, 430227734, 506948616, 659060556, 883997877, 958139571, 1322822218, 1537002063, 1747873779, 1955562222, 2024104815, 2227730452, 2361852424, 2428436474, 2756734187, 3204031479, 3329325298];
   const b = [];
@@ -8356,7 +8366,7 @@ function instrLoadAny(text, ok, fail) {
     j ? (instrJobName = key, ok(j)) : fail('No job named "' + text + '" was found. Check the spelling with your instructor.');
   }).catch(() => fail("Job names only work when the game is opened from its web address. Paste the full job code instead."));
   if (!PUT_SB.url) return viaFile();
-  fetch(PUT_SB.url.replace(/\/+$/, "") + "/rest/v1/jobs?select=code&name=eq." + encodeURIComponent(key), { headers: instrSbHeaders() }).then((r) => {
+  (TSESS ? sbRest("jobs?select=code&name=eq." + encodeURIComponent(key)) : fetch(PUT_SB.url.replace(/\/+$/, "") + "/rest/v1/jobs?select=code&name=eq." + encodeURIComponent(key), { headers: instrSbHeaders() })).then((r) => {
     if (!r.ok) throw 0;
     return r.json();
   }).then((rows) => {
@@ -8373,6 +8383,7 @@ function instrPublish(name, pw, code, done) {
   if (!PUT_SB.url) return done(false, "Supabase is not connected in this copy of the game.");
   if (!key) return done(false, "Type a short job name first.");
   if (TRAINER.account) return sbRpc("publish_job_trainer", { job_name: key, job_code: code }).then(() => done(true, "Published. Trainees can now type: " + key)).catch((e) => done(false, e.message));
+  return done(false, "Sign in with your trainer account to publish jobs.");
   if (!pw) return done(false, "Enter the publish password.");
   fetch(PUT_SB.url.replace(/\/+$/, "") + "/rest/v1/rpc/publish_job", { method: "POST", headers: instrSbHeaders({ "Content-Type": "application/json" }), body: JSON.stringify({ pw, job_name: key, job_code: code }) }).then((r) => r.ok ? done(true, "Published. Trainees can now type: " + key) : r.text().then((t) => done(false, /wrong password/i.test(t) ? "That publish password is not right." : "Could not publish (" + r.status + "). Check the Supabase setup."))).catch(() => done(false, "Could not reach Supabase. Check the connection."));
 }
@@ -8537,8 +8548,8 @@ function instrEditSheet() {
     $("iJson").value = "  " + JSON.stringify(n) + ": " + JSON.stringify($("iOut").value);
   };
   $("iName").oninput = jsonLine;
+  $("iPubPw").style.display = "none";
   if (TRAINER.account) {
-    $("iPubPw").hidden = true;
     $("iPubBox").querySelector("label").textContent = "Publish for trainees under the short job name above (signed in as " + TRAINER.name + ")";
   }
   if (!PUT_SB.url) {
@@ -8636,108 +8647,6 @@ function setTrainee(n) {
   renderWho();
   return n;
 }
-const TRAINER = { on: false, name: "", account: false, admin: false, email: "" };
-function renderWho() {
-  const b = document.getElementById("whoBtn");
-  if (b) b.textContent = TRAINER.on ? "Trainer: " + (TRAINER.name || "signed in") : traineeName() ? "Trainee: " + traineeName() : "Trainee or trainer?";
-}
-function trainerSet(on, name, opt) {
-  opt = opt || {};
-  TRAINER.on = on;
-  TRAINER.name = on ? name : "";
-  TRAINER.account = on && !!opt.account;
-  TRAINER.admin = on && !!opt.admin;
-  TRAINER.email = on ? opt.email || "" : "";
-  if (!on) tsSignOut();
-  heatUnlocked = on;
-  CLS.unlocked = on;
-  recSignOk = on;
-  if (on) recSignBy = name;
-  document.querySelectorAll("#setSel option").forEach((o) => {
-    const k = o.value;
-    if (HEAT_SETS.includes(k)) o.textContent = SETS[k].label + (heatOK() ? "" : " (locked)");
-  });
-  if (!on && CLS.open) {
-    CLS.open = false;
-    clsRender();
-  }
-  renderWho();
-}
-function whoSheet(after, tab) {
-  const wasActive = active;
-  active = false;
-  tab = tab || (TRAINER.on ? "trainer" : "trainee");
-  const close = () => {
-    $("sheet").classList.remove("wide");
-    $("modal").hidden = true;
-    active = wasActive;
-    if (after) after();
-  };
-  const seg = `<div class="row rcSeg" style="justify-content:flex-start;margin:0 0 12px"><button class="btn${tab === "trainee" ? " on" : ""}" data-who="trainee" type="button">Trainee</button><button class="btn${tab === "trainer" ? " on" : ""}" data-who="trainer" type="button">Trainer</button></div>`;
-  if (tab === "trainee") {
-    sheet(`<div class="kick">Who is using the game</div><h3>Trainee</h3>${seg}
-      <p style="color:var(--dim);margin-top:0">Your instructor sees this name next to your finished jobs and on your training record. Use your rank and last name, or whatever your instructor asked for.</p>
-      <div class="fld"><label for="whoIn">Name</label><input id="whoIn" type="text" maxlength="60" autocomplete="name" value="${esc(traineeName())}" placeholder="SrA Smith"></div>
-      ${TRAINER.on ? '<p class="dim" style="font-size:13px">Saving signs the trainer out on this device.</p>' : ""}
-      <p class="iErr" id="whoErr"></p>
-      <div class="row"><button class="btn" id="whoCancel" type="button">Cancel</button><button class="btn go" id="whoOk" type="button">Save</button></div>`);
-    const save = () => {
-      const n = $("whoIn").value.trim();
-      if (!n) {
-        $("whoErr").textContent = "Type a name first.";
-        return;
-      }
-      setTrainee(n);
-      if (TRAINER.on) trainerSet(false);
-      close();
-    };
-    $("whoOk").onclick = save;
-    $("whoCancel").onclick = close;
-    $("whoIn").onkeydown = (e) => {
-      if (e.key === "Enter") save();
-    };
-    setTimeout(() => {
-      const i = $("whoIn");
-      if (i) i.focus();
-    }, 30);
-  } else if (!TRAINER.on) {
-    return trainerSignInSheet(after, seg, close);
-  } else {
-    sheet(`<div class="kick">Trainer</div><h3>${esc(TRAINER.name)}</h3>${seg}
-      <p style="color:var(--dim);margin-top:0">${TRAINER.account ? "Signed in as " + esc(TRAINER.email) + (TRAINER.admin ? " (admin)" : "") : "Signed in with the instructor password (offline). Trainee results need your own account."} Stays signed in until you sign out or close this tab. Jobs you play now are not recorded.</p>
-      <div class="whoTools">
-        <button class="btn go" id="trRes" type="button">Trainee results<span>Every job sent in from every device</span></button>
-        <button class="btn" id="trRec" type="button">Training records on this device<span>Skills sheets and sign-offs</span></button>
-        <button class="btn" id="trJob" type="button">Instructor job setup<span>Build or assign a job</span></button>
-        <button class="btn" id="trCls" type="button">Class controls<span>Run a job for the room</span></button>
-        ${TRAINER.admin ? '<button class="btn" id="trMgr" type="button">Manage trainers<span>Approve new accounts, remove trainers, hand out admin</span></button>' : ""}
-      </div>
-      <div class="row"><button class="btn" id="trOut" type="button">Sign out</button><button class="btn" id="whoCancel" type="button">Close</button></div>`);
-    $("trRes").onclick = () => resultsSheet(() => whoSheet(after, "trainer"));
-    $("trRec").onclick = () => {
-      active = wasActive;
-      recSheet(Object.keys(recAll()).sort()[0], true);
-    };
-    $("trJob").onclick = () => {
-      $("modal").hidden = true;
-      active = wasActive;
-      $("setSel").value = "C";
-      $("setSel").dispatchEvent(new Event("change", { bubbles: true }));
-    };
-    $("trCls").onclick = () => {
-      $("modal").hidden = true;
-      active = wasActive;
-      if (!CLS.open) clsToggle();
-    };
-    $("trOut").onclick = () => {
-      trainerSet(false);
-      whoSheet(after, "trainee");
-    };
-    if ($("trMgr")) $("trMgr").onclick = () => trainerManageSheet(() => whoSheet(after, "trainer"));
-    $("whoCancel").onclick = close;
-  }
-  $("sheet").querySelectorAll("[data-who]").forEach((b) => b.onclick = () => whoSheet(after, b.dataset.who));
-}
 const RQ_KEY = "put_result_queue";
 const rqGet = () => {
   try {
@@ -8757,33 +8666,39 @@ let rqBusy = false;
 function resultsFlush(cb) {
   cb = cb || (() => {
   });
-  if (!PUT_SB.url) return cb(false, rqGet().length);
-  if (rqBusy) return cb(false, rqGet().length);
-  const q = rqGet();
-  if (!q.length) return cb(true, 0);
+  const q0 = rqGet();
+  if (!sbOn() || rqBusy) return cb(false, q0.length);
+  const uid = ACCT.me && ACCT.me.user_id;
+  if (uid && ACCT.me.role === "trainee" && q0.some((x) => !x._uid)) {
+    q0.forEach((x) => {
+      if (!x._uid) x._uid = uid;
+    });
+    rqSet(q0);
+  }
+  const mine = q0.filter((x) => uid && x._uid === uid);
+  if (!mine.length) return cb(true, 0);
   rqBusy = true;
-  const url = PUT_SB.url.replace(/\/+$/, "") + "/rest/v1/results";
   const sendOne = (i) => {
-    if (i >= q.length) {
+    if (i >= mine.length) {
       rqBusy = false;
-      const left = rqGet();
+      const left = rqGet().filter((x) => x._uid === uid);
       return cb(left.length === 0, left.length);
     }
-    fetch(url, { method: "POST", headers: instrSbHeaders({ "Content-Type": "application/json", Prefer: "return=minimal" }), body: JSON.stringify(q[i]) }).then((r) => {
-      if (r.ok || r.status === 400 || r.status === 422) {
-        const left = rqGet().filter((x) => x.client_id !== q[i].client_id);
-        rqSet(left);
-      }
+    const row = Object.assign({}, mine[i]);
+    delete row._uid;
+    sbRest("results", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify(row) }).then((r) => {
+      if (r.ok || r.status === 400 || r.status === 422) rqSet(rqGet().filter((x) => x.client_id !== mine[i].client_id));
       sendOne(i + 1);
     }).catch(() => {
       rqBusy = false;
-      cb(false, rqGet().length);
+      cb(false, rqGet().filter((x) => x._uid === uid).length);
     });
   };
   sendOne(0);
 }
 function resultQueue(rec) {
   rec.client_id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  rec._uid = ACCT.me ? ACCT.me.user_id : null;
   const q = rqGet();
   q.push(rec);
   rqSet(q);
@@ -8793,6 +8708,11 @@ function resultReport(win, info) {
   if (TRAINER.on) {
     const bx = $("rsBox");
     if (bx) bx.innerHTML = '<p class="dim" style="font-size:13px;margin:8px 0 0">Trainer signed in: this job was not recorded.</p>';
+    return;
+  }
+  if (sbOn() && !ACCT.me) {
+    const bx = $("rsBox");
+    if (bx) bx.innerHTML = '<p class="dim" style="font-size:13px;margin:8px 0 0">Not signed in: this job was not recorded.</p>';
     return;
   }
   recAdd(win, info);
@@ -8830,7 +8750,7 @@ function resultReport(win, info) {
     resultQueue(rec);
     box.innerHTML = '<p class="dim" id="rsMsg" style="font-size:13px;margin:8px 0 0"></p>';
     status("Sending this result to your instructor...");
-    resultsFlush((ok, left) => status(ok ? "Result sent to your instructor." : "Saved on this device. It will send by itself next time the game is online.", ok ? "var(--green)" : "var(--dim)"));
+    resultsFlush((ok, left) => (recRefresh(), status(ok ? "Result sent to your instructor." : "Saved on this device. It will send by itself next time the game is online.", ok ? "var(--green)" : "var(--dim)")));
   };
   if (traineeName()) return go();
   box.innerHTML = `<div class="fld" style="margin-top:10px"><label for="rsName">Your name, so your instructor gets this result</label><div class="row" style="justify-content:flex-start;flex-wrap:nowrap"><input id="rsName" type="text" maxlength="60" placeholder="SrA Smith" style="flex:1;min-width:0"><button class="btn go" id="rsSend" type="button">Send</button></div></div><p class="dim" id="rsMsg" style="font-size:13px;margin:4px 0 0"></p>`;
@@ -8851,8 +8771,8 @@ function resultReport(win, info) {
 let rsCache = null, rsPw = "";
 function resultsSheet(back) {
   sheet(`<div class="kick">Instructor \xB7 trainee results</div><h3>Trainee results</h3>
-    <p style="color:var(--dim);margin-top:0">Every finished or failed job from every device, newest first.${TRAINER.account ? "" : " Uses your publish password."}</p>
-    <div class="row" style="justify-content:flex-start;flex-wrap:wrap${TRAINER.account ? ";display:none" : ""}"><input id="rsPw" type="password" autocomplete="off" placeholder="Publish password" value="${esc(rsPw)}" style="flex:1 1 180px;min-width:0"><button class="btn go" id="rsLoad" type="button">Load results</button></div>
+    <p style="color:var(--dim);margin-top:0">Every finished or failed job from every device, newest first.</p>
+    <div class="row" style="justify-content:flex-start;flex-wrap:wrap;display:none"><input id="rsPw" type="password" autocomplete="off" placeholder="Publish password" value="${esc(rsPw)}" style="flex:1 1 180px;min-width:0"><button class="btn go" id="rsLoad" type="button">Load results</button></div>
     <p class="iErr" id="rsErr"></p>
     <div id="rsBody"></div>
     <div class="row" style="flex-wrap:wrap"><button class="btn" id="rsBack" type="button">Back</button><button class="btn" id="rsCsv" type="button" hidden>Download spreadsheet (CSV)</button><button class="btn" id="rsDel" type="button" hidden>Delete all results</button></div>`);
@@ -8870,6 +8790,8 @@ function resultsSheet(back) {
         $("rsErr").textContent = e.message;
       });
     }
+    $("rsErr").textContent = "Sign in with your trainer account to see results.";
+    return;
     rsPw = $("rsPw").value;
     $("rsErr").textContent = "";
     if (!PUT_SB.url) {
@@ -8981,34 +8903,86 @@ function coBlock(steps) {
     return '<p style="margin:2px 0"><b>' + esc(m[1]) + ":</b> " + esc(m[2]) + "</p>";
   }).join("") + "</div>";
 }
-let TSESS = null;
-try {
-  TSESS = JSON.parse(sessionStorage.getItem("put_tsess") || "null");
-} catch (e) {
-}
-const tsSave = () => {
-  try {
-    if (TSESS) sessionStorage.setItem("put_tsess", JSON.stringify(TSESS));
-    else sessionStorage.removeItem("put_tsess");
-  } catch (e) {
+const TRAINER = { on: false, name: "", account: false, admin: false, email: "" };
+const ACCT = { me: null, msg: "" };
+let recSignBy = "";
+function trainerSet(on, name, opt) {
+  opt = opt || {};
+  TRAINER.on = on;
+  TRAINER.name = on ? name : "";
+  TRAINER.account = on && !!opt.account;
+  TRAINER.admin = on && !!opt.admin;
+  TRAINER.email = on ? opt.email || "" : "";
+  heatUnlocked = on;
+  CLS.unlocked = on;
+  if (on) recSignBy = name;
+  document.querySelectorAll("#setSel option").forEach((o) => {
+    const k = o.value;
+    if (HEAT_SETS.includes(k)) o.textContent = SETS[k].label + (heatOK() ? "" : " (locked)");
+  });
+  if (!on && CLS.open) {
+    CLS.open = false;
+    clsRender();
   }
-};
+  renderWho();
+}
+function renderWho() {
+  const b = document.getElementById("whoBtn");
+  if (!b) return;
+  const me = ACCT.me;
+  b.textContent = me ? (me.role === "trainer" ? "Trainer: " : "") + (me.name || me.email) : TRAINER.on ? "Trainer (offline): " + TRAINER.name : sbOn() ? "Sign in" : traineeName() ? "Trainee: " + traineeName() : "Set your name";
+}
 const sbBase = () => PUT_SB.url.replace(/\/+$/, "");
 const sbOn = () => !!(PUT_SB && PUT_SB.url && PUT_SB.key);
+const store = (keep) => {
+  try {
+    return keep ? localStorage : sessionStorage;
+  } catch (e) {
+    return null;
+  }
+};
+function stGet(k) {
+  for (const s of [store(true), store(false)]) {
+    try {
+      const v = s && s.getItem(k);
+      if (v) return JSON.parse(v);
+    } catch (e) {
+    }
+  }
+  return null;
+}
+function stSet(k, v, keep) {
+  [true, false].forEach((kp) => {
+    const s = store(kp);
+    try {
+      if (!s) return;
+      if (v != null && kp === !!keep) s.setItem(k, JSON.stringify(v));
+      else s.removeItem(k);
+    } catch (e) {
+    }
+  });
+}
+let TSESS = stGet("put_sess");
+const tsSave = () => stSet("put_sess", TSESS, TSESS && TSESS.keep);
 function sbMsg(t, status) {
   t = String(t || "");
-  if (/invalid login credentials/i.test(t)) return "That email or password is not right.";
-  if (/email not confirmed/i.test(t)) return "Confirm your email first: open the link Supabase emailed you, then sign in.";
+  if (/invalid login credentials|invalid_credentials/i.test(t)) return "That email or password is not right.";
+  if (/email not confirmed/i.test(t)) return "Confirm your email first: open the link that was emailed to you, then sign in.";
   if (/already registered|already been registered|user_already_exists/i.test(t)) return "That email already has an account. Sign in instead.";
   if (/password should be|weak_password/i.test(t)) return "Pick a longer password (at least 6 characters).";
   if (/signups not allowed|signup_disabled/i.test(t)) return "New accounts are turned off in Supabase (Authentication > Sign In / Providers > Email).";
-  if (/could not find the function|PGRST202|does not exist/i.test(t)) return "Trainer accounts are not set up in Supabase yet. Run trainer_setup.sql once.";
-  if (/not an approved trainer/i.test(t)) return "Your trainer account is not approved yet.";
+  if (/could not find the function|PGRST202|does not exist/i.test(t)) return "Accounts are not set up in Supabase yet. Run accounts_setup.sql once.";
+  if (/not approved/i.test(t)) return "Your account is not approved yet.";
+  if (/trainers only/i.test(t)) return "Only a trainer can do that.";
   if (/admins only/i.test(t)) return "Only an admin can do that.";
-  if (/cannot remove your own admin/i.test(t)) return "You cannot remove your own admin access.";
-  if (/failed to fetch|network/i.test(t)) return "Could not reach the server. Check the internet connection.";
+  if (/cannot remove your own/i.test(t)) return "You cannot remove your own access.";
   return t ? t.slice(0, 160) : "Something went wrong (" + status + ").";
 }
+const offlineErr = () => {
+  const e = new Error("Could not reach the server. Check the internet connection.");
+  e.offline = true;
+  return e;
+};
 function sbJson(r) {
   return r.text().then((t) => {
     let j = null;
@@ -9016,17 +8990,21 @@ function sbJson(r) {
       j = t ? JSON.parse(t) : null;
     } catch (e) {
     }
-    if (!r.ok) throw new Error(sbMsg(j && (j.error_description || j.msg || j.message || j.error_code || j.hint) || t, r.status));
+    if (!r.ok) {
+      const e = new Error(sbMsg(j && (j.error_description || j.msg || j.message || j.error_code || j.hint) || t, r.status));
+      e.status = r.status;
+      throw e;
+    }
     return j;
   });
 }
 function sbAuth(path, body, token) {
   return fetch(sbBase() + "/auth/v1/" + path, { method: "POST", headers: Object.assign({ apikey: PUT_SB.key, "Content-Type": "application/json" }, token ? { Authorization: "Bearer " + token } : {}), body: JSON.stringify(body || {}) }).catch(() => {
-    throw new Error(sbMsg("failed to fetch"));
+    throw offlineErr();
   }).then(sbJson);
 }
-function tsKeep(j) {
-  TSESS = { access: j.access_token, refresh: j.refresh_token, exp: Date.now() + (j.expires_in || 3600) * 1e3, email: j.user && j.user.email || TSESS && TSESS.email || "" };
+function tsKeep(j, keep) {
+  TSESS = { access: j.access_token, refresh: j.refresh_token, exp: Date.now() + (j.expires_in || 3600) * 1e3, email: j.user && j.user.email || TSESS && TSESS.email || "", keep: keep != null ? !!keep : !!(TSESS && TSESS.keep) };
   tsSave();
 }
 function tsToken() {
@@ -9036,180 +9014,341 @@ function tsToken() {
     tsKeep(j);
     return TSESS.access;
   }).catch((e) => {
-    TSESS = null;
-    tsSave();
+    if (e.offline) throw e;
+    acctSignOut("Your sign-in ran out. Sign in again.");
     throw new Error("Your sign-in ran out. Sign in again.");
   });
 }
+const sbHeaders = (tok) => ({ apikey: PUT_SB.key, Authorization: "Bearer " + tok, "Content-Type": "application/json" });
 function sbRpc(name, args) {
-  return tsToken().then((tok) => fetch(sbBase() + "/rest/v1/rpc/" + name, { method: "POST", headers: { apikey: PUT_SB.key, Authorization: "Bearer " + tok, "Content-Type": "application/json" }, body: JSON.stringify(args || {}) }).catch(() => {
-    throw new Error(sbMsg("failed to fetch"));
+  return tsToken().then((tok) => fetch(sbBase() + "/rest/v1/rpc/" + name, { method: "POST", headers: sbHeaders(tok), body: JSON.stringify(args || {}) }).catch(() => {
+    throw offlineErr();
   })).then(sbJson);
 }
-function tsCheck() {
-  return sbRpc("trainer_me").then((rows) => {
+function sbRest(path, opt) {
+  return tsToken().then((tok) => fetch(sbBase() + "/rest/v1/" + path, Object.assign({}, opt || {}, { headers: Object.assign(sbHeaders(tok), opt && opt.headers || {}) })).catch(() => {
+    throw offlineErr();
+  }));
+}
+function acctApply(me) {
+  const prev = stGet("put_last_uid");
+  ACCT.me = me;
+  stSet("put_me", me, TSESS && TSESS.keep);
+  stSet("put_last_uid", me.user_id, true);
+  if (prev && prev !== me.user_id) {
+    doneSet.clear();
+    try {
+      localStorage.setItem("put_done", "[]");
+    } catch (e) {
+    }
+    renderTabs();
+  }
+  if (me.role === "trainer") {
+    setTrainee("");
+    trainerSet(true, me.name || me.email, { account: true, admin: !!me.is_admin, email: me.email });
+  } else {
+    trainerSet(false);
+    setTrainee(me.name || me.email);
+  }
+  renderWho();
+  gateHide();
+}
+function acctVerify() {
+  return sbRpc("member_me").then((rows) => {
     const me = Array.isArray(rows) ? rows[0] : rows;
     if (me && me.status === "active") {
-      trainerSet(true, me.name || TSESS.email, { account: true, admin: !!me.is_admin, email: TSESS.email });
+      acctApply(me);
+      acctSync();
       return "active";
     }
     return me ? me.status : "none";
   });
 }
-function tsSignOut() {
+function acctSignOut(msg) {
   const tok = TSESS && TSESS.access;
   TSESS = null;
   tsSave();
   if (tok && sbOn()) sbAuth("logout", {}, tok).catch(() => {
   });
+  ACCT.me = null;
+  ACCT.msg = msg || "";
+  stSet("put_me", null);
+  stSet("put_rec_cache", null);
+  doneSet.clear();
+  try {
+    localStorage.setItem("put_done", "[]");
+  } catch (e) {
+  }
+  renderTabs();
+  setTrainee("");
+  trainerSet(false);
+  renderWho();
+  if (sbOn()) gateShow("in");
 }
-function tsResume() {
-  if (TSESS && sbOn()) tsCheck().catch(() => {
+function acctBoot() {
+  if (!sbOn()) {
+    renderWho();
+    return;
+  }
+  const me = TSESS && stGet("put_me");
+  if (me && me.status === "active") {
+    acctApply(me);
+  } else gateShow(TSESS ? "check" : "in");
+  if (TSESS) acctVerify().then((st) => {
+    if (st === "active") return;
+    const keepSess = st === "pending";
+    if (!keepSess) acctSignOut(st === "removed" ? "This account was removed. Ask a trainer to restore it." : "");
+    else {
+      ACCT.me = null;
+      stSet("put_me", null);
+      setTrainee("");
+      trainerSet(false);
+      renderWho();
+      gateShow("wait");
+    }
+  }).catch((e) => {
+    if (!e.offline) return;
+    if (!ACCT.me) gateShow("in", "No connection. The first sign-in on a device needs the internet.");
+  });
+  window.addEventListener("online", () => {
+    if (ACCT.me) acctSync();
   });
 }
-function trainerSignInSheet(after, seg, close, view) {
-  view = view || (sbOn() ? "in" : "offline");
-  const err = '<p class="iErr" id="whoErr"></p>';
-  if (view === "offline") {
-    sheet(`<div class="kick">Who is using the game</div><h3>Trainer sign-in</h3>${seg}
-      <p style="color:var(--dim);margin-top:0">${sbOn() ? "No internet? The instructor password opens class controls, sign-offs and the locked units on this device. Trainee results need your own account and a connection." : "Opens class controls, sign-offs and the locked units. Jobs you play while signed in are not recorded."}</p>
-      <div class="fld"><label for="trName">Your rank and name</label><input id="trName" type="text" maxlength="40" value="${esc(recSignBy)}" placeholder="TSgt Jones"></div>
-      <div class="fld"><label for="trPw">Instructor password</label><input id="trPw" type="password" autocomplete="off"></div>${err}
-      <div class="row" style="flex-wrap:wrap">${sbOn() ? '<button class="btn" id="trBack" type="button">Use my account</button>' : ""}<button class="btn" id="whoCancel" type="button">Cancel</button><button class="btn go" id="trGo" type="button">Sign in</button></div>`);
+function gateHide() {
+  const g = $("gate");
+  if (g) g.hidden = true;
+}
+function gateShow(view, note) {
+  const g = $("gate"), c = $("gateCard");
+  if (!g || !c) return;
+  g.hidden = false;
+  active = false;
+  const keepBox = `<label class="chk"><input type="checkbox" id="gKeep" checked> Keep me signed in on this device</label><p class="dim" style="font-size:12.5px;margin:0 0 6px 26px">Untick on shared devices like the smartboard.</p>`;
+  const msg = note || ACCT.msg || "";
+  ACCT.msg = "";
+  const head = `<div class="kick">Package Unit Troubleshooting</div>`;
+  const err = `<p class="iErr" id="gErr">${esc(msg)}</p>`;
+  const busy = (t) => {
+    const m = $("gErr");
+    if (m) {
+      m.style.color = "var(--dim)";
+      m.textContent = t;
+    }
+    $("gate").querySelectorAll("button").forEach((b) => b.disabled = true);
+  };
+  const fail = (e) => {
+    $("gate").querySelectorAll("button").forEach((b) => b.disabled = false);
+    const m = $("gErr");
+    if (m) {
+      m.style.color = "";
+      m.textContent = e.message;
+    }
+  };
+  const after = (st) => {
+    if (st === "active") return;
+    if (st === "none") return gateShow("name");
+    if (st === "removed") return acctSignOut("This account was removed. Ask a trainer to restore it.");
+    gateShow("wait");
+  };
+  if (view === "check") {
+    c.innerHTML = head + '<h3>Checking your account</h3><p class="dim">One moment...</p>';
+  } else if (view === "create") {
+    c.innerHTML = head + `<h3>Create your account</h3>
+      <p style="color:var(--dim);margin-top:0">Your account works on any device. A trainer has to approve it before you can use the game.</p>
+      <div class="fld"><label>I am a</label><div class="row rcSeg" id="gRole" style="justify-content:flex-start"><button class="btn on" data-r="trainee" type="button">Trainee</button><button class="btn" data-r="trainer" type="button">Trainer</button></div></div>
+      <div class="fld"><label for="gName">Rank and name</label><input id="gName" type="text" maxlength="40" placeholder="SrA Smith"></div>
+      <div class="fld"><label for="gEm">Email</label><input id="gEm" type="email" autocomplete="username" maxlength="120"></div>
+      <div class="fld"><label for="gPw">Pick a password (at least 6 characters)</label><input id="gPw" type="password" autocomplete="new-password"></div>
+      ${keepBox}${err}
+      <div class="row" style="flex-wrap:wrap"><button class="btn" id="gBack" type="button">I have an account</button><button class="btn go" id="gGo" type="button">Create account</button></div>`;
+    let role = "trainee";
+    $("gRole").onclick = (e) => {
+      const b = e.target.closest("[data-r]");
+      if (!b) return;
+      role = b.dataset.r;
+      $("gRole").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b));
+    };
+    $("gBack").onclick = () => gateShow("in");
     const go = () => {
-      const n = $("trName").value.trim();
-      if (!n) {
-        $("whoErr").textContent = "Type your rank and name.";
-        $("trName").focus();
-        return;
-      }
-      if (!instrPwOk($("trPw").value)) {
-        $("whoErr").textContent = "That password is not right.";
-        $("trPw").select();
+      const n = $("gName").value.trim(), em = $("gEm").value.trim(), pw = $("gPw").value, keep = $("gKeep").checked;
+      if (!n || !em || !pw) return fail(new Error("Fill in your name, email and a password."));
+      busy("Creating your account...");
+      sbAuth("signup", { email: em, password: pw, data: { name: n } }).then((j) => {
+        if (!j || !j.access_token) {
+          gateShow("in", "Check your email: open the confirmation link, then sign in here.");
+          return;
+        }
+        tsKeep(j, keep);
+        return sbRpc("member_request", { p_name: n, p_role: role }).then(acctVerify).then(after);
+      }).catch(fail);
+    };
+    $("gGo").onclick = go;
+    $("gPw").onkeydown = (e) => {
+      if (e.key === "Enter") go();
+    };
+    setTimeout(() => $("gName").focus(), 30);
+  } else if (view === "name") {
+    c.innerHTML = head + `<h3>Finish your account</h3>
+      <p style="color:var(--dim);margin-top:0">This account has not asked for access yet.</p>
+      <div class="fld"><label>I am a</label><div class="row rcSeg" id="gRole" style="justify-content:flex-start"><button class="btn on" data-r="trainee" type="button">Trainee</button><button class="btn" data-r="trainer" type="button">Trainer</button></div></div>
+      <div class="fld"><label for="gName">Rank and name</label><input id="gName" type="text" maxlength="40" placeholder="SrA Smith"></div>${err}
+      <div class="row"><button class="btn" id="gBack" type="button">Sign out</button><button class="btn go" id="gGo" type="button">Ask for access</button></div>`;
+    let role = "trainee";
+    $("gRole").onclick = (e) => {
+      const b = e.target.closest("[data-r]");
+      if (!b) return;
+      role = b.dataset.r;
+      $("gRole").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b));
+    };
+    $("gBack").onclick = () => acctSignOut();
+    $("gGo").onclick = () => {
+      const n = $("gName").value.trim();
+      if (!n) return fail(new Error("Type your rank and name."));
+      busy("Sending...");
+      sbRpc("member_request", { p_name: n, p_role: role }).then(acctVerify).then(after).catch(fail);
+    };
+  } else if (view === "wait") {
+    c.innerHTML = head + `<h3>Waiting for approval</h3>
+      <p>Your account is made. ${"A trainer approves trainee accounts and an admin approves trainer accounts, from Account > Manage people."} Once you are approved, tap Check again.</p>${err}
+      <div class="row"><button class="btn" id="gBack" type="button">Sign out</button><button class="btn go" id="gGo" type="button">Check again</button></div>`;
+    $("gBack").onclick = () => acctSignOut();
+    $("gGo").onclick = () => {
+      busy("Checking...");
+      acctVerify().then((st) => {
+        if (st !== "active") {
+          after(st);
+          const m = $("gErr");
+          if (m && st === "pending") m.textContent = "Not approved yet.";
+        }
+      }).catch(fail);
+    };
+  } else if (view === "offline") {
+    c.innerHTML = head + `<h3>Trainer without internet</h3>
+      <p style="color:var(--dim);margin-top:0">For a trainer running the game on a device with no connection, like the smartboard. Opens the game, class controls and the locked units until the page is closed. Nothing is recorded, and trainee results need a connection.</p>
+      <div class="fld"><label for="gName">Your rank and name</label><input id="gName" type="text" maxlength="40" placeholder="TSgt Jones"></div>
+      <div class="fld"><label for="gPw">Instructor password</label><input id="gPw" type="password" autocomplete="off"></div>${err}
+      <div class="row"><button class="btn" id="gBack" type="button">Back</button><button class="btn go" id="gGo" type="button">Open the game</button></div>`;
+    $("gBack").onclick = () => gateShow("in");
+    const go = () => {
+      const n = $("gName").value.trim();
+      if (!n) return fail(new Error("Type your rank and name."));
+      if (!instrPwOk($("gPw").value)) {
+        fail(new Error("That password is not right."));
+        $("gPw").select();
         return;
       }
       trainerSet(true, n, { account: false });
-      whoSheet(after, "trainer");
+      gateHide();
     };
-    $("trGo").onclick = go;
-    $("trPw").onkeydown = (e) => {
+    $("gGo").onclick = go;
+    $("gPw").onkeydown = (e) => {
       if (e.key === "Enter") go();
     };
-    $("whoCancel").onclick = close;
-    if ($("trBack")) $("trBack").onclick = () => trainerSignInSheet(after, seg, close, "in");
-  } else if (view === "create") {
-    sheet(`<div class="kick">Who is using the game</div><h3>Create a trainer account</h3>${seg}
-      <p style="color:var(--dim);margin-top:0">Your account works on any device. An admin has to approve it before it opens trainee results.</p>
-      <div class="fld"><label for="trName">Your rank and name</label><input id="trName" type="text" maxlength="40" value="${esc(recSignBy)}" placeholder="TSgt Jones"></div>
-      <div class="fld"><label for="trEm">Email</label><input id="trEm" type="email" autocomplete="username" maxlength="120"></div>
-      <div class="fld"><label for="trPw">Pick a password (at least 6 characters)</label><input id="trPw" type="password" autocomplete="new-password"></div>${err}
-      <div class="row" style="flex-wrap:wrap"><button class="btn" id="trBack" type="button">I have an account</button><button class="btn" id="whoCancel" type="button">Cancel</button><button class="btn go" id="trGo" type="button">Create account</button></div>`);
-    const go = () => {
-      const n = $("trName").value.trim(), em = $("trEm").value.trim(), pw = $("trPw").value;
-      if (!n || !em || !pw) {
-        $("whoErr").textContent = "Fill in your name, email and a password.";
-        return;
-      }
-      $("trGo").disabled = true;
-      $("whoErr").style.color = "var(--dim)";
-      $("whoErr").textContent = "Creating your account...";
-      sbAuth("signup", { email: em, password: pw, data: { name: n } }).then((j) => {
-        if (!j || !j.access_token) {
-          trainerNote(after, seg, close, "Check your email", "Supabase sent a confirmation link to " + em + ". Open it, then come back and sign in. Your account still needs an admin to approve it.");
-          return;
-        }
-        tsKeep(j);
-        recSignBy = n;
-        return sbRpc("trainer_request", { p_name: n }).then(() => tsCheck()).then((st) => {
-          if (st === "active") whoSheet(after, "trainer");
-          else trainerNote(after, seg, close, "Waiting for approval", "Your account is made. An admin approves it from Trainer > Manage trainers. Then sign in here.");
-        });
-      }).catch((e) => {
-        const b = $("trGo");
-        if (b) b.disabled = false;
-        const m = $("whoErr");
-        if (m) {
-          m.style.color = "";
-          m.textContent = e.message;
-        }
-      });
-    };
-    $("trGo").onclick = go;
-    $("trPw").onkeydown = (e) => {
-      if (e.key === "Enter") go();
-    };
-    $("whoCancel").onclick = close;
-    $("trBack").onclick = () => trainerSignInSheet(after, seg, close, "in");
+    setTimeout(() => $("gName").focus(), 30);
   } else {
-    sheet(`<div class="kick">Who is using the game</div><h3>Trainer sign-in</h3>${seg}
-      <p style="color:var(--dim);margin-top:0">Sign in with your own trainer account. Opens trainee results, sign-offs, class controls and the locked units. Jobs you play while signed in are not recorded.</p>
-      <div class="fld"><label for="trEm">Email</label><input id="trEm" type="email" autocomplete="username" maxlength="120" value="${esc(TSESS && TSESS.email || "")}"></div>
-      <div class="fld"><label for="trPw">Password</label><input id="trPw" type="password" autocomplete="current-password"></div>
-      <div class="fld" id="trNameBox" hidden><label for="trName">Your rank and name</label><input id="trName" type="text" maxlength="40" value="${esc(recSignBy)}" placeholder="TSgt Jones"></div>${err}
-      <div class="row" style="flex-wrap:wrap"><button class="btn" id="whoCancel" type="button">Cancel</button><button class="btn go" id="trGo" type="button">Sign in</button></div>
-      <div class="row" style="justify-content:flex-start;flex-wrap:wrap;margin-top:6px"><button class="btn" id="trNew" type="button">Create an account</button><button class="btn" id="trOff" type="button">No internet? Instructor password</button></div>`);
-    let needName = false;
+    c.innerHTML = head + `<h3>Sign in</h3>
+      <p style="color:var(--dim);margin-top:0">Sign in with your own account. Your finished jobs, progress and training record follow you to any device.</p>
+      <div class="fld"><label for="gEm">Email</label><input id="gEm" type="email" autocomplete="username" maxlength="120" value="${esc(TSESS && TSESS.email || "")}"></div>
+      <div class="fld"><label for="gPw">Password</label><input id="gPw" type="password" autocomplete="current-password"></div>
+      ${keepBox}${err}
+      <div class="row"><button class="btn go" id="gGo" type="button">Sign in</button></div>
+      <div class="row" style="justify-content:flex-start;flex-wrap:wrap;margin-top:6px"><button class="btn" id="gNew" type="button">Create an account</button><button class="btn" id="gOff" type="button">Trainer with no internet</button></div>`;
+    $("gNew").onclick = () => gateShow("create");
+    $("gOff").onclick = () => gateShow("offline");
     const go = () => {
-      const em = $("trEm").value.trim(), pw = $("trPw").value;
-      if (!em || !pw) {
-        $("whoErr").textContent = "Type your email and password.";
-        return;
-      }
-      if (needName && !$("trName").value.trim()) {
-        $("whoErr").textContent = "Type your rank and name.";
-        return;
-      }
-      $("trGo").disabled = true;
-      $("whoErr").style.color = "var(--dim)";
-      $("whoErr").textContent = "Signing in...";
-      const fail = (e) => {
-        const b = $("trGo");
-        if (b) b.disabled = false;
-        const m = $("whoErr");
-        if (m) {
-          m.style.color = "";
-          m.textContent = e.message;
-        }
-      };
-      (TSESS && TSESS.email === em && needName ? Promise.resolve() : sbAuth("token?grant_type=password", { email: em, password: pw }).then(tsKeep)).then(() => needName ? sbRpc("trainer_request", { p_name: $("trName").value.trim() }) : null).then(() => tsCheck()).then((st) => {
-        if (st === "active") return whoSheet(after, "trainer");
-        if (st === "none") {
-          needName = true;
-          $("trNameBox").hidden = false;
-          $("trGo").disabled = false;
-          $("whoErr").style.color = "";
-          $("whoErr").textContent = "This account has not asked to be a trainer yet. Type your rank and name, then Sign in again.";
-          $("trName").focus();
-          return;
-        }
-        tsSignOut();
-        trainerNote(after, seg, close, st === "removed" ? "Account removed" : "Waiting for approval", st === "removed" ? "An admin removed this trainer account. Ask them to restore it." : "Your account is made but an admin has not approved it yet. They do it from Trainer > Manage trainers.");
-      }).catch(fail);
+      const em = $("gEm").value.trim(), pw = $("gPw").value, keep = $("gKeep").checked;
+      if (!em || !pw) return fail(new Error("Type your email and password."));
+      busy("Signing in...");
+      sbAuth("token?grant_type=password", { email: em, password: pw }).then((j) => {
+        tsKeep(j, keep);
+        return acctVerify();
+      }).then(after).catch(fail);
     };
-    $("trGo").onclick = go;
-    $("trPw").onkeydown = (e) => {
+    $("gGo").onclick = go;
+    $("gPw").onkeydown = (e) => {
       if (e.key === "Enter") go();
     };
-    $("whoCancel").onclick = close;
-    $("trNew").onclick = () => trainerSignInSheet(after, seg, close, "create");
-    $("trOff").onclick = () => trainerSignInSheet(after, seg, close, "offline");
+    setTimeout(() => {
+      const i = $(TSESS && TSESS.email ? "gPw" : "gEm");
+      if (i) i.focus();
+    }, 30);
   }
-  $("sheet").querySelectorAll("[data-who]").forEach((b) => b.onclick = () => whoSheet(after, b.dataset.who));
-  setTimeout(() => {
-    const i = $(view === "in" && TSESS && TSESS.email ? "trPw" : view === "in" ? "trEm" : "trName");
-    if (i) i.focus();
-  }, 30);
 }
-function trainerNote(after, seg, close, title, text) {
-  sheet(`<div class="kick">Trainer account</div><h3>${esc(title)}</h3>${seg}<p>${esc(text)}</p>
-    <div class="row"><button class="btn" id="whoCancel" type="button">Close</button><button class="btn go" id="trBack" type="button">Back to sign-in</button></div>`);
+function whoSheet(after) {
+  const wasActive = active;
+  active = false;
+  const close = () => {
+    $("sheet").classList.remove("wide");
+    $("modal").hidden = true;
+    active = wasActive;
+    if (after) after();
+  };
+  const me = ACCT.me;
+  if (!me && !TRAINER.on) {
+    if (sbOn()) {
+      close();
+      return gateShow("in");
+    }
+    sheet(`<div class="kick">Trainee</div><h3>Your name</h3>
+      <div class="fld"><label for="whoIn">Name</label><input id="whoIn" type="text" maxlength="60" value="${esc(traineeName())}" placeholder="SrA Smith"></div><p class="iErr" id="whoErr"></p>
+      <div class="row"><button class="btn" id="whoCancel" type="button">Cancel</button><button class="btn go" id="whoOk" type="button">Save</button></div>`);
+    const save = () => {
+      const n = $("whoIn").value.trim();
+      if (!n) {
+        $("whoErr").textContent = "Type a name first.";
+        return;
+      }
+      setTrainee(n);
+      renderWho();
+      close();
+    };
+    $("whoOk").onclick = save;
+    $("whoCancel").onclick = close;
+    return;
+  }
+  const trainer = TRAINER.on, acct = !!me;
+  const tool = (id, t, s, go) => `<button class="btn${go ? " go" : ""}" id="${id}" type="button">${t}<span>${s}</span></button>`;
+  sheet(`<div class="kick">${trainer ? "Trainer" : "Trainee"}${me && me.is_admin ? " \xB7 admin" : ""}</div><h3>${esc(trainer ? TRAINER.name : me.name)}</h3>
+    <p style="color:var(--dim);margin-top:0">${acct ? "Signed in as " + esc(me.email) + (TSESS && TSESS.keep ? ". Stays signed in on this device until you sign out." : ". Signs out when this tab closes.") : "Signed in with the instructor password, no internet. Nothing is recorded."}${trainer ? " Jobs you play as a trainer are not recorded." : ""}</p>
+    <div class="whoTools">
+      ${trainer ? (acct ? tool("trRes", "Trainee results", "Every job sent in, from every device", true) + tool("trRec", "Training records", "Any trainee's skills sheet and sign-offs") + tool("trMgr", "Manage people", "Approve new accounts, remove or restore people" + (me.is_admin ? ", hand out trainer and admin" : "")) : "") + tool("trJob", "Instructor job setup", "Build or assign a job") + tool("trCls", "Class controls", "Run a job for the room") : tool("trMine", "My training record", "Your skills, jobs and sign-offs", true)}
+    </div>
+    <div class="row"><button class="btn" id="trOut" type="button">Sign out</button><button class="btn" id="whoCancel" type="button">Close</button></div>`);
+  const tie = (id, fn) => {
+    const b = $(id);
+    if (b) b.onclick = fn;
+  };
+  tie("trRes", () => resultsSheet(() => whoSheet(after)));
+  tie("trRec", () => recPick(() => whoSheet(after)));
+  tie("trMgr", () => peopleSheet(() => whoSheet(after)));
+  tie("trMine", () => {
+    active = wasActive;
+    recMine();
+  });
+  tie("trJob", () => {
+    $("modal").hidden = true;
+    active = wasActive;
+    $("setSel").value = "C";
+    $("setSel").dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  tie("trCls", () => {
+    $("modal").hidden = true;
+    active = wasActive;
+    if (!CLS.open) clsToggle();
+  });
+  $("trOut").onclick = () => {
+    $("modal").hidden = true;
+    if (acct) acctSignOut();
+    else {
+      trainerSet(false);
+      if (sbOn()) gateShow("in");
+    }
+  };
   $("whoCancel").onclick = close;
-  $("trBack").onclick = () => trainerSignInSheet(after, seg, close, "in");
-  $("sheet").querySelectorAll("[data-who]").forEach((b) => b.onclick = () => whoSheet(after, b.dataset.who));
 }
-function trainerManageSheet(back) {
-  sheet(`<div class="kick">Admin</div><h3>Manage trainers</h3>
-    <p style="color:var(--dim);margin-top:0">New accounts wait here until you approve them. Removing a trainer locks them out at once on every device.</p>
+function peopleSheet(back) {
+  sheet(`<div class="kick">Trainer</div><h3>Manage people</h3>
+    <p style="color:var(--dim);margin-top:0">New accounts wait here until they are approved. Removing someone locks them out at once on every device.${ACCT.me && ACCT.me.is_admin ? "" : " Only an admin can approve trainers."}</p>
     <p class="iErr" id="tmErr"></p><div id="tmBody"><p class="dim">Loading...</p></div>
     <div class="row"><button class="btn" id="tmBack" type="button">Back</button></div>`);
   $("sheet").classList.add("wide");
@@ -9217,22 +9356,31 @@ function trainerManageSheet(back) {
     $("sheet").classList.remove("wide");
     back();
   };
+  const admin = !!(ACCT.me && ACCT.me.is_admin), myId = ACCT.me && ACCT.me.user_id;
   const chip = (s) => `<span class="recChip ${s === "active" ? "lv3" : s === "pending" ? "lv1" : ""}">${s === "active" ? "Approved" : s === "pending" ? "Waiting" : "Removed"}</span>`;
-  const load = () => sbRpc("trainer_list").then((rows) => {
+  const btn = (r, label, st, role, adm, go) => `<button class="btn${go ? " go" : ""}" data-u="${r.user_id}" data-s="${st}" data-r="${role}" data-a="${adm ? 1 : 0}" type="button">${label}</button>`;
+  const load = () => sbRpc("member_list").then((rows) => {
     rows = rows || [];
-    if (!rows.length) {
-      $("tmBody").innerHTML = '<p class="dim">No trainer accounts yet.</p>';
-      return;
-    }
-    $("tmBody").innerHTML = rows.map((r) => {
-      const me = TSESS && r.email && r.email.toLowerCase() === TSESS.email.toLowerCase();
-      const btns = r.status === "pending" ? `<button class="btn go" data-u="${r.user_id}" data-s="active" data-a="0" type="button">Approve</button><button class="btn" data-u="${r.user_id}" data-s="removed" data-a="0" type="button">Turn down</button>` : r.status === "removed" ? `<button class="btn" data-u="${r.user_id}" data-s="active" data-a="0" type="button">Restore</button>` : me ? '<span class="dim" style="font-size:12px">You</span>' : `<button class="btn" data-u="${r.user_id}" data-s="active" data-a="${r.is_admin ? 0 : 1}" type="button">${r.is_admin ? "Remove admin" : "Make admin"}</button><button class="btn" data-u="${r.user_id}" data-s="removed" data-a="0" type="button">Remove</button>`;
-      return `<div class="tmRow"><div><b>${esc(r.name || "(no name)")}</b>${r.is_admin ? ' <span class="recChip lv4">Admin</span>' : ""}<br><span class="dim" style="font-size:12.5px">${esc(r.email || "")}</span></div>${chip(r.status)}<div class="tmBtns">${btns}</div></div>`;
-    }).join("");
+    const groups = [["Waiting for approval", (r) => r.status === "pending"], ["Trainees", (r) => r.status === "active" && r.role === "trainee"], ["Trainers", (r) => r.status === "active" && r.role === "trainer"], ["Removed", (r) => r.status === "removed"]];
+    $("tmBody").innerHTML = groups.map(([g, f]) => {
+      const list = rows.filter(f);
+      if (!list.length) return "";
+      return `<div class="recGh">${g} (${list.length})</div>` + list.map((r) => {
+        const can = admin || r.role === "trainee";
+        let b = "";
+        if (r.user_id === myId) b = '<span class="dim" style="font-size:12px">You</span>';
+        else if (!can) b = '<span class="dim" style="font-size:12px">An admin handles trainers</span>';
+        else if (r.status === "pending") b = btn(r, "Approve", "active", r.role, false, true) + btn(r, "Turn down", "removed", r.role, false);
+        else if (r.status === "removed") b = btn(r, "Restore", "active", r.role, false);
+        else if (r.role === "trainee") b = (admin ? btn(r, "Make trainer", "active", "trainer", false) : "") + btn(r, "Remove", "removed", "trainee", false);
+        else b = btn(r, r.is_admin ? "Remove admin" : "Make admin", "active", "trainer", !r.is_admin) + btn(r, "Make trainee", "active", "trainee", false) + btn(r, "Remove", "removed", "trainer", false);
+        return `<div class="tmRow"><div><b>${esc(r.name || "(no name)")}</b> <span class="dim" style="font-size:12px">${r.role === "trainer" ? "Trainer" : "Trainee"}</span>${r.is_admin ? ' <span class="recChip lv4">Admin</span>' : ""}<br><span class="dim" style="font-size:12.5px">${esc(r.email || "")}</span></div>${chip(r.status)}<div class="tmBtns">${b}</div></div>`;
+      }).join("");
+    }).join("") || '<p class="dim">No accounts yet.</p>';
     $("tmBody").querySelectorAll("[data-u]").forEach((b) => b.onclick = () => {
       b.disabled = true;
       $("tmErr").textContent = "";
-      sbRpc("trainer_set", { p_user: b.dataset.u, p_status: b.dataset.s, p_admin: b.dataset.a === "1" }).then(load).catch((e) => {
+      sbRpc("member_set", { p_user: b.dataset.u, p_status: b.dataset.s, p_role: b.dataset.r, p_admin: b.dataset.a === "1" }).then(load).catch((e) => {
         $("tmErr").textContent = e.message;
         b.disabled = false;
       });
@@ -9242,6 +9390,39 @@ function trainerManageSheet(back) {
     $("tmErr").textContent = e.message;
   });
   load();
+}
+let stateT = null;
+function stateData() {
+  let set = null, rc = null;
+  try {
+    set = localStorage.getItem("put_set");
+    rc = JSON.parse(localStorage.getItem("put_rc") || "null");
+  } catch (e) {
+  }
+  return { done: [...doneSet], set, rc };
+}
+function statePush() {
+  clearTimeout(stateT);
+  stateT = setTimeout(() => {
+    if (ACCT.me && ACCT.me.role === "trainee") sbRpc("state_save", { p_data: stateData() }).catch(() => {
+    });
+  }, 1500);
+}
+function acctSync() {
+  if (!ACCT.me) return;
+  if (ACCT.me.role === "trainee") sbRpc("state_get").then((d) => {
+    d = d || {};
+    const before = doneSet.size;
+    (d.done || []).forEach((id) => doneSet.add(id));
+    try {
+      localStorage.setItem("put_done", JSON.stringify([...doneSet]));
+    } catch (e) {
+    }
+    if (doneSet.size !== before) renderTabs();
+    if ((d.done || []).length !== doneSet.size) statePush();
+  }).catch(() => {
+  });
+  resultsFlush(() => recRefresh());
 }
 const LOTO = { locked: false };
 const lotoLineSide = (id) => /^F[123]_IN$/.test(id);
@@ -11865,39 +12046,81 @@ function recTags(l) {
   if (STEPS.some((s) => /Close-out · /.test(s))) t.add("sCO");
   return [...t];
 }
-const REC_KEY = "put_record_v1";
-const recAll = () => {
-  try {
-    const r = JSON.parse(localStorage.getItem(REC_KEY) || "{}");
-    return r && typeof r === "object" ? r : {};
-  } catch (e) {
-    return {};
-  }
-};
-const recSave = (r) => {
-  try {
-    localStorage.setItem(REC_KEY, JSON.stringify(r));
-  } catch (e) {
-  }
-};
-const recWho = () => traineeName() || "(no name)";
 function recAdd(win, info) {
-  const l = CUR.levels[li], tags = recTags(l);
-  stepLog("Skills \xB7 " + tags.join(", "));
-  const all = recAll(), who = recWho(), me = all[who] || (all[who] = { jobs: [], signoff: {} });
-  me.jobs.push({
-    t: Date.now(),
-    set: CUR.label,
-    job: l.random ? "Random " + l.call + " \xB7 " + l.unitName : l.title,
-    pass: !!win,
-    stars: win ? info.stars || 0 : 0,
-    strikes,
-    wrong: wrongParts,
-    secs: info.secs != null ? info.secs : stepSecs(),
-    tags
+  stepLog("Skills \xB7 " + recTags(CUR.levels[li]).join(", "));
+}
+function recJob(r) {
+  const line = (Array.isArray(r.steps) ? r.steps : []).find((x) => /Skills · /.test(x)) || "";
+  const t = r.created_at ? new Date(r.created_at).getTime() : parseInt(String(r.client_id || "").slice(0, 8), 36) || Date.now();
+  return {
+    t,
+    set: r.unit_set || "",
+    job: r.job_name || r.job || "",
+    pass: !!r.passed,
+    stars: r.stars || 0,
+    strikes: r.strikes || 0,
+    wrong: r.wrong_parts || 0,
+    secs: r.seconds || 0,
+    tags: line.replace(/^.*?Skills · /, "").split(/,\s*/).filter(Boolean),
+    waiting: !r.created_at
+  };
+}
+const recFromRows = (rows) => rows.map(recJob).sort((a, b) => a.t - b.t);
+function recMineData() {
+  const c = stGet("put_rec_cache") || {}, uid = ACCT.me && ACCT.me.user_id;
+  const rows = (c.uid === uid ? c.rows || [] : []).concat(rqGet().filter((x) => x._uid === uid));
+  return { rows, signoff: c.uid === uid ? c.signoff || {} : {}, at: c.uid === uid ? c.at : 0 };
+}
+function recRefresh() {
+  if (!ACCT.me || ACCT.me.role !== "trainee") return Promise.resolve();
+  const uid = ACCT.me.user_id;
+  return Promise.all([sbRpc("my_results"), sbRpc("signoffs_for", { p_trainee: uid })]).then(([rows, so]) => {
+    const signoff = {};
+    (so || []).forEach((x) => {
+      signoff[x.skill] = { by: x.by_name, t: new Date(x.at).getTime() };
+    });
+    stSet("put_rec_cache", { uid, rows: rows || [], signoff, at: Date.now() }, TSESS && TSESS.keep);
+  }).catch(() => {
   });
-  if (me.jobs.length > 500) me.jobs = me.jobs.slice(-500);
-  recSave(all);
+}
+function recMine() {
+  const show = () => {
+    const d = recMineData();
+    recSheet({ name: ACCT.me ? ACCT.me.name : traineeName(), rows: d.rows, signoff: d.signoff, note: d.at ? "" : "Showing what is saved on this device. Connect to the internet to load the rest." });
+  };
+  show();
+  recRefresh().then(() => {
+    if (!$("modal").hidden && $("recMx")) show();
+  });
+}
+function recPick(back) {
+  sheet(`<div class="kick">Trainer</div><h3>Training records</h3><p style="color:var(--dim);margin-top:0">Pick a trainee to see their skills sheet and sign off skills.</p>
+    <p class="iErr" id="rpErr"></p><div id="rpBody" class="rpList"><p class="dim">Loading...</p></div><div class="row"><button class="btn" id="rpBack" type="button">Back</button></div>`);
+  $("rpBack").onclick = back;
+  sbRpc("member_list").then((rows) => {
+    const list = (rows || []).filter((r) => r.role === "trainee" && r.status === "active");
+    $("rpBody").innerHTML = list.length ? list.map((r) => `<button class="btn" data-u="${r.user_id}" type="button">${esc(r.name || r.email)}<span>${esc(r.email)}</span></button>`).join("") : '<p class="dim">No approved trainees yet.</p>';
+    $("rpBody").querySelectorAll("[data-u]").forEach((b) => b.onclick = () => {
+      const r = list.find((x) => x.user_id === b.dataset.u);
+      recFor(r, () => recPick(back));
+    });
+  }).catch((e) => {
+    $("rpBody").innerHTML = "";
+    $("rpErr").textContent = e.message;
+  });
+}
+function recFor(m, back) {
+  sheet('<div class="kick">Training record</div><h3>' + esc(m.name || m.email) + '</h3><p class="dim">Loading...</p>');
+  Promise.all([sbRpc("member_results", { p_user: m.user_id }), sbRpc("signoffs_for", { p_trainee: m.user_id })]).then(([rows, so]) => {
+    const signoff = {};
+    (so || []).forEach((x) => {
+      signoff[x.skill] = { by: x.by_name, t: new Date(x.at).getTime() };
+    });
+    recSheet({ name: m.name || m.email, rows: rows || [], signoff, sign: (skill, on) => sbRpc("signoff_set", { p_trainee: m.user_id, p_skill: skill, p_on: on }).then(() => recFor(m, back)), back });
+  }).catch((e) => {
+    sheet('<div class="kick">Training record</div><h3>' + esc(m.name || m.email) + '</h3><p class="iErr">' + esc(e.message) + '</p><div class="row"><button class="btn" id="rfBack" type="button">Back</button></div>');
+    $("rfBack").onclick = back;
+  });
 }
 function recSkills(jobs) {
   const s = {};
@@ -11930,35 +12153,35 @@ function recMatrix(sk, signoff, signMode) {
     return `<div class="recRow"><span class="recN">${esc(n)}</span>${chip}<span class="recMeta">${meta}${sign ? (meta ? "<br>" : "") + sign : ""}</span>${btn}</div>`;
   }).join("") + "</div>").join("");
 }
-let recSignBy = "";
-function recSheet(name, signMode) {
-  const all = recAll(), names = Object.keys(all).sort(), who = name || recWho(), me = all[who] || { jobs: [], signoff: {} };
+function recSheet(opt) {
+  opt = opt || {};
   const wasActive = active;
   active = false;
-  const jobs = me.jobs || [], pass = jobs.filter((j) => j.pass), sk = recSkills(jobs);
+  const jobs = recFromRows(opt.rows || []), pass = jobs.filter((j) => j.pass), sk = recSkills(jobs), signoff = opt.signoff || {};
   const avg = pass.length ? (pass.reduce((a, j) => a + (j.stars || 0), 0) / pass.length).toFixed(1) : "\u2013";
   const secs = jobs.reduce((a, j) => a + (j.secs || 0), 0), hrs = Math.floor(secs / 3600), mins = Math.round(secs % 3600 / 60);
-  const prof = Object.values(sk).filter((x) => x.level === 3).length, signed = Object.keys(me.signoff || {}).length;
-  sheet(`<div class="kick">Training record</div><h3>${esc(who)}</h3>
-    ${names.length > 1 ? `<div class="row noPrint" style="justify-content:flex-start;margin:-4px 0 8px"><label class="dim" for="recWho">Trainee on this device</label><select id="recWho">${names.map((n) => `<option${n === who ? " selected" : ""}>${esc(n)}</option>`).join("")}</select></div>` : ""}
-    <p class="dim" style="margin-top:0;font-size:13px">Kept on this device. Printed ${recDate(Date.now())}.${jobs.length ? " First job " + recDate(jobs[0].t) + "." : ""}</p>
+  const prof = Object.values(sk).filter((x) => x.level === 3).length, signed = Object.keys(signoff).length, waiting = jobs.filter((j) => j.waiting).length;
+  sheet(`<div class="kick">Training record</div><h3>${esc(opt.name || "")}</h3>
+    <p class="dim" style="margin-top:0;font-size:13px">Printed ${recDate(Date.now())}.${jobs.length ? " First job " + recDate(jobs[0].t) + "." : ""}${waiting ? " " + waiting + " job" + (waiting > 1 ? "s" : "") + " still waiting to upload." : ""}${opt.note ? " " + esc(opt.note) : ""}</p>
     <div class="recTiles"><div><b>${pass.length}</b><span>jobs passed of ${jobs.length}</span></div><div><b>${avg}${pass.length ? "\u2605" : ""}</b><span>average on passed jobs</span></div>
       <div><b>${jobs.reduce((a, j) => a + (j.strikes || 0), 0)}</b><span>safety strikes</span></div><div><b>${hrs ? hrs + "h " : ""}${mins}m</b><span>time on jobs</span></div>
       <div><b>${prof}</b><span>skills proficient</span></div><div><b>${signed}</b><span>signed off</span></div></div>
-    ${signMode ? `<div class="fld noPrint"><label for="recBy">Your rank and name for the sign-off</label><input id="recBy" type="text" maxlength="40" value="${esc(recSignBy)}" placeholder="TSgt Jones"></div>` : ""}
-    <div class="recMx">${recMatrix(sk, me.signoff, signMode)}</div>
-    <p class="dim" style="font-size:12px">Proficient means 3 or more passed jobs that used the skill, with at least 2 of them clean (no safety strikes, no wrong parts).</p>
+    <div class="recMx" id="recMx">${recMatrix(sk, signoff, !!opt.sign)}</div>
+    <p class="dim" style="font-size:12px">Proficient means 3 or more passed jobs that used the skill, with at least 2 of them clean (no safety strikes, no wrong parts).${opt.sign ? "" : " Only a trainer can sign off a skill."}</p>
     <div class="recGh" style="margin-top:12px">Recent jobs</div>
-    ${jobs.length ? `<div class="rsWrap"><table class="rsTbl"><thead><tr><th>Date</th><th>Job</th><th>Result</th><th>Strikes</th><th>Time</th></tr></thead><tbody>${jobs.slice(-25).reverse().map((j) => `<tr><td>${esc(recDate(j.t))}</td><td>${esc(j.set)}<br><span class="dim">${esc(j.job)}</span></td><td>${j.pass ? "\u2605".repeat(j.stars || 1) : '<span style="color:var(--red)">Failed</span>'}</td><td>${j.strikes || 0}</td><td>${mmss(j.secs || 0)}</td></tr>`).join("")}</tbody></table></div>` : '<p class="dim">No jobs yet. Finish a job and it shows up here.</p>'}
+    ${jobs.length ? `<div class="rsWrap"><table class="rsTbl"><thead><tr><th>Date</th><th>Job</th><th>Result</th><th>Strikes</th><th>Time</th></tr></thead><tbody>${jobs.slice(-25).reverse().map((j) => `<tr><td>${esc(recDate(j.t))}${j.waiting ? '<br><span class="dim">waiting</span>' : ""}</td><td>${esc(j.set)}<br><span class="dim">${esc(j.job)}</span></td><td>${j.pass ? "\u2605".repeat(j.stars || 1) : '<span style="color:var(--red)">Failed</span>'}</td><td>${j.strikes || 0}</td><td>${mmss(j.secs || 0)}</td></tr>`).join("")}</tbody></table></div>` : '<p class="dim">No jobs yet. Finish a job and it shows up here.</p>'}
     <p class="iErr noPrint" id="recErr"></p>
-    <div class="row noPrint" style="flex-wrap:wrap"><button class="btn" id="recClose" type="button">Close</button><button class="btn" id="recPrint" type="button">Print</button>${signMode ? '<button class="btn" id="recDone" type="button">Done signing</button>' : '<button class="btn" id="recSignBtn" type="button">Instructor sign-off</button>'}</div>`);
+    <div class="row noPrint" style="flex-wrap:wrap">${opt.back ? '<button class="btn" id="recBack" type="button">Back</button>' : ""}<button class="btn" id="recClose" type="button">Close</button><button class="btn" id="recPrint" type="button">Print</button></div>`);
   $("sheet").classList.add("wide");
-  const close = () => {
+  $("recClose").onclick = () => {
     $("sheet").classList.remove("wide");
     $("modal").hidden = true;
     active = wasActive;
   };
-  $("recClose").onclick = close;
+  if (opt.back) $("recBack").onclick = () => {
+    $("sheet").classList.remove("wide");
+    opt.back();
+  };
   $("recPrint").onclick = () => {
     try {
       window.print();
@@ -11966,60 +12189,12 @@ function recSheet(name, signMode) {
       $("recErr").textContent = "Printing is blocked here. Open the game file in a browser to print.";
     }
   };
-  if ($("recWho")) $("recWho").onchange = (e) => recSheet(e.target.value, signMode);
-  if (!signMode) $("recSignBtn").onclick = () => {
-    if (heatOK() || recSignOk) return recSheet(who, true);
-    recLockSheet(() => recSheet(who, true), () => recSheet(who));
-  };
-  else {
-    $("recDone").onclick = () => recSheet(who);
-    $("recBy").oninput = (e) => {
-      recSignBy = e.target.value.trim();
-    };
-    $("sheet").querySelectorAll(".recSign").forEach((b) => b.onclick = () => {
-      const a = recAll(), m = a[who] || (a[who] = { jobs: [], signoff: {} });
-      m.signoff = m.signoff || {};
-      if (m.signoff[b.dataset.sk]) delete m.signoff[b.dataset.sk];
-      else {
-        if (!recSignBy) {
-          $("recErr").textContent = "Type your rank and name first.";
-          $("recBy").focus();
-          return;
-        }
-        m.signoff[b.dataset.sk] = { by: recSignBy, t: Date.now() };
-      }
-      recSave(a);
-      recSheet(who, true);
+  if (opt.sign) $("sheet").querySelectorAll(".recSign").forEach((b) => b.onclick = () => {
+    b.disabled = true;
+    opt.sign(b.dataset.sk, !signoff[b.dataset.sk]).catch((e) => {
+      $("recErr").textContent = e.message;
+      b.disabled = false;
     });
-  }
-}
-let recSignOk = false;
-function recLockSheet(after, cancel) {
-  sheet(`<div class="kick">Instructor</div><h3>Sign off skills</h3>
-    <p style="color:var(--dim);margin-top:0">Sign-offs go on this trainee's record on this device.</p>
-    <div class="fld"><label for="recPw">Instructor password</label><input id="recPw" type="password" autocomplete="off"></div>
-    <p class="iErr" id="recPwErr"></p>
-    <div class="row"><button class="btn" id="recPwNo" type="button">Cancel</button><button class="btn go" id="recPwGo" type="button">Unlock</button></div>`);
-  const go = () => {
-    if (instrPwOk($("recPw").value)) {
-      recSignOk = true;
-      after();
-    } else {
-      $("recPwErr").textContent = "That password is not right.";
-      $("recPw").select();
-    }
-  };
-  $("recPwGo").onclick = go;
-  $("recPw").onkeydown = (e) => {
-    if (e.key === "Enter") go();
-  };
-  $("recPwNo").onclick = cancel;
-  setTimeout(() => $("recPw").focus(), 30);
-}
-function recFromRows(rows) {
-  return rows.slice().reverse().map((r) => {
-    const line = (Array.isArray(r.steps) ? r.steps : []).find((s) => /Skills · /.test(s)) || "";
-    return { t: new Date(r.created_at).getTime(), pass: !!r.passed, strikes: r.strikes || 0, wrong: r.wrong_parts || 0, tags: line.replace(/^.*?Skills · /, "").split(/,\s*/).filter(Boolean) };
   });
 }
 let washState = null;
@@ -13790,6 +13965,7 @@ const saveDone = () => {
     localStorage.setItem("put_done", JSON.stringify([...doneSet]));
   } catch (e) {
   }
+  if (typeof statePush === "function") statePush();
 };
 function log(msg, cls) {
   const d = document.createElement("div");
@@ -14707,8 +14883,9 @@ function init() {
   rigInit();
   $("whoBtn").onclick = () => whoSheet();
   renderWho();
-  $("recBtn").onclick = () => recSheet();
-  tsResume();
+  $("recBtn").onclick = () => TRAINER.account ? recPick(() => {
+    $("modal").hidden = true;
+  }) : recMine();
   resultsFlush();
   window.addEventListener("online", () => resultsFlush());
   let rpT = null;
@@ -15017,6 +15194,7 @@ function init() {
   startLevel(first < 0 ? 0 : first);
   if (CUR.key === "X") rcEnter();
   if (CUR.key === "S") msEnter();
+  acctBoot();
   try {
     const m = /[#?&]job=([^&]+)/.exec(location.hash + location.search);
     if (m && typeof instrLoadAny === "function") instrLoadAny(decodeURIComponent(m[1]), (j) => {
