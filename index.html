@@ -8938,16 +8938,33 @@ function instrLoadAny(text, ok, fail) {
     j ? (instrJobName = key, ok(j)) : fail('No job named "' + text + '" was found. Check the spelling with your instructor.');
   }).catch(() => fail("Job names only work when the game is opened from its web address. Paste the full job code instead."));
   if (!PUT_SB.url) return viaFile();
-  (TSESS ? sbRest("jobs?select=code&name=eq." + encodeURIComponent(key)) : fetch(PUT_SB.url.replace(/\/+$/, "") + "/rest/v1/jobs?select=code&name=eq." + encodeURIComponent(key), { headers: instrSbHeaders() })).then((r) => {
-    if (!r.ok) throw 0;
+  if (!TSESS) return fail("Sign in first. Job names only open for approved accounts. You can still paste the full job code.");
+  const near = (a, b) => {
+    const m = a.length, n = b.length, d = Array.from({ length: m + 1 }, (_, i) => [i].concat(new Array(n).fill(0)));
+    for (let k = 1; k <= n; k++) d[0][k] = k;
+    for (let x = 1; x <= m; x++) for (let y = 1; y <= n; y++) d[x][y] = Math.min(d[x - 1][y] + 1, d[x][y - 1] + 1, d[x - 1][y - 1] + (a[x - 1] === b[y - 1] ? 0 : 1));
+    return d[m][n];
+  };
+  const offline = () => fail("Could not reach the job list. Check the internet connection, or sign out and back in, then try again. Pasting the full job code also works.");
+  sbRest("jobs?select=name,code&name=eq." + encodeURIComponent(key)).then((r) => {
+    if (!r.ok) throw r.status;
     return r.json();
   }).then((rows) => {
     const j = rows && rows[0] ? instrDecode(rows[0].code) : null;
     if (j) {
       instrJobName = key;
-      ok(j);
-    } else viaFile();
-  }).catch(() => viaFile());
+      return ok(j);
+    }
+    return sbRest("jobs?select=name,code").then((r) => r.ok ? r.json() : []).then((all) => {
+      const best = (all || []).map((x) => [x, near(key, String(x.name).toLowerCase())]).sort((a, b) => a[1] - b[1])[0];
+      if (best && best[1] <= Math.max(2, Math.floor(key.length / 4))) {
+        const c = $("iCode");
+        if (c) c.value = best[0].name;
+        return fail('No job named "' + text + '". Did you mean "' + best[0].name + '"? It is filled in for you; press Start again.');
+      }
+      fail('No job named "' + text + '" was found. Check the spelling with your instructor.');
+    });
+  }).catch((st) => st === 401 || st === 403 ? fail("Your account is not approved yet, or your sign-in ran out. Sign out and back in, then try again.") : offline());
 }
 const instrSbHeaders = (extra) => Object.assign({ apikey: PUT_SB.key }, /^eyJ/.test(PUT_SB.key) ? { Authorization: "Bearer " + PUT_SB.key } : {}, extra || {});
 function instrPublish(name, pw, code, done) {
