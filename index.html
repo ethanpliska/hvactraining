@@ -8968,14 +8968,14 @@ function instrBackOut() {
   startLevel(f < 0 ? 0 : f);
 }
 function instrLockSheet(msg) {
-  sheet(`<div class="kick">Instructor job</div><h3>Locked</h3>
-    <p style="color:var(--dim)">Enter the instructor password to set up a job, or paste a job code from your instructor to start one.</p>
-    <div class="fld"><label for="iPw">Instructor password</label><input id="iPw" type="password" autocomplete="off"></div>
+  sheet(`<div class="kick">Instructor job</div><h3>Start a job from your instructor</h3>
+    <p style="color:var(--dim);margin-top:0">Type the job name your instructor gave you (for example <b>hotel-1</b>), or paste the full job code.</p>
+    <div class="fld"><label for="iCode">Job name or job code</label><textarea id="iCode" rows="2" spellcheck="false" placeholder="hotel-1"></textarea></div>
     <p class="iErr" id="iErr">${msg ? esc(msg) : ""}</p>
-    <div class="row" style="justify-content:flex-start"><button class="btn go" id="iUnlock" type="button">Unlock setup</button></div>
-    <hr class="ihr">
-    <div class="fld"><label for="iCode">Job name or job code</label><textarea id="iCode" rows="2" spellcheck="false" placeholder="A short job name, or a code starting PUT1."></textarea></div>
-    <div class="row"><button class="btn" id="iBack" type="button">Back</button><button class="btn go" id="iLoad" type="button">Start job</button></div>`);
+    <div class="row"><button class="btn" id="iBack" type="button">Back</button><button class="btn go" id="iLoad" type="button">Start job</button></div>
+    <details class="igrp" style="margin-top:16px"><summary>Instructor? Set up a new job</summary>
+      <div class="fld"><label for="iPw">Instructor password</label><input id="iPw" type="password" autocomplete="off"></div>
+      <div class="row" style="justify-content:flex-start"><button class="btn go" id="iUnlock" type="button">Unlock setup</button></div></details>`);
   const go = () => {
     if (instrPwOk($("iPw").value)) {
       instrUnlocked = true;
@@ -8996,8 +8996,14 @@ function instrLockSheet(msg) {
       $("iErr").textContent = m;
     });
   };
+  $("iCode").onkeydown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      $("iLoad").click();
+    }
+  };
   setTimeout(() => {
-    const e = $("iPw");
+    const e = $("iCode");
     if (e) e.focus();
   }, 30);
 }
@@ -9006,7 +9012,11 @@ function instrEditSheet() {
   if (!INSTR_UNITS[d.unit]) d.unit = "cool";
   const U = INSTR_UNITS[d.unit], cool = /^cool/.test(d.unit);
   d.faults = d.faults.filter((f) => INSTR_ALL_U[d.unit][f]);
-  sheet(`<div class="kick">Instructor job \xB7 setup</div><h3>Set the trouble</h3>
+  sheet(`<div class="kick">Instructor job \xB7 setup</div>
+    <details class="igrp" id="iOpenBox"><summary>Open a job that is already made (by job name or code)</summary>
+      <div class="fld"><label for="iCode">Job name or job code</label><textarea id="iCode" rows="2" spellcheck="false" placeholder="hotel-1"></textarea></div>
+      <p class="iErr" id="iLoadErr"></p><div class="row" style="justify-content:flex-start"><button class="btn go" id="iLoad" type="button">Start that job</button></div></details>
+    <h3>Set the trouble</h3>
     <p style="color:var(--dim);margin-top:0">Pick the unit, then what is wrong with it. Trainees never see this list. Write the ticket the way a customer would, without naming the part.</p>
     <div class="fld"><label for="iUnit">Unit</label><select id="iUnit">${Object.keys(INSTR_UNITS).map((u) => `<option value="${u}"${d.unit === u ? " selected" : ""}>${INSTR_UNITS[u].name}</option>`).join("")}</select></div>
     <div class="fld"><label for="iTitle">Customer or site name</label><input id="iTitle" type="text" maxlength="80" value="${esc(d.title)}" placeholder="Maple Street Dental"></div>
@@ -9034,6 +9044,22 @@ function instrEditSheet() {
       <div class="fld" id="iPubBox"><label for="iPubPw">Publish for trainees (uses the short job name above)</label><input id="iPubPw" type="password" autocomplete="off" placeholder="Publish password"></div><div class="row" style="justify-content:flex-start"><button class="btn go" id="iPublish" type="button">Publish job</button></div><p class="iErr" id="iPubMsg" style="color:var(--dim)"></p>
       <p class="dim" style="font-size:12px">A job code hides the faults from a casual look, but it is not a secret. A trainee who knows how to decode it can read the faults.</p></div>`);
   $("sheet").classList.add("wide");
+  $("iLoad").onclick = () => {
+    $("iLoadErr").textContent = "";
+    instrLoadAny($("iCode").value, (j) => {
+      $("sheet").classList.remove("wide");
+      instrUnlocked = false;
+      instrStart(j);
+    }, (m) => {
+      $("iLoadErr").textContent = m;
+    });
+  };
+  $("iCode").onkeydown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      $("iLoad").click();
+    }
+  };
   const read = () => {
     d.title = $("iTitle").value.trim();
     d.site = $("iSite").value.trim();
@@ -9058,7 +9084,7 @@ function instrEditSheet() {
       const n = d.nominal || 9;
       $("iPct").textContent = d.charge == null ? "Charge: automatic" : "Charge: " + d.charge + " lb = " + Math.round(d.charge / n * 100) + "% of rated";
     }
-    document.querySelectorAll("#sheet .igrp").forEach((g) => {
+    document.querySelectorAll("#sheet .igrp[data-g]").forEach((g) => {
       const n = g.querySelectorAll("[data-f]:checked").length;
       g.querySelector(".igc").textContent = n ? "(" + n + " selected)" : "";
     });
